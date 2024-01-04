@@ -5,6 +5,9 @@ import EmployeesControl from "../controllers/employeesController.js";
 const router = express.Router();
 
 // Admin Routes
+router.get("/",(req,res)=>{
+    res.send("Hello ")
+})
 router.post("/add-admin",AdminControler.AddAdmin);
 router.post("/admin",AdminControler.LoginAdmin);
 router.post("/add-staff",verifyAdminToken,AdminControler.AddEmployees);

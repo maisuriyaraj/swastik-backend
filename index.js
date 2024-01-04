@@ -7,7 +7,7 @@ import "dotenv/config";
 import "./config/DB_connection.js";
 import {router} from "./routes/routes.js";
 const app = express();
-const port = process.env.PORT
+const port = process.env.PORT || 5000;
 app.use(express.json());
 // use Api Cross Platform
 app.use(cors());
