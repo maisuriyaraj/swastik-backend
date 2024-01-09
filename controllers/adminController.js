@@ -67,19 +67,19 @@ class AdminControler{
             if(req.body){
                 const emp = await staffModal.findOne({email:email});
                 if(emp){
-                    res.send({status:false,message:"Employee Already Exists"})
+                    res.status(200).send({status:false,message:"Employee Already Exists"})
                 }else{
                     const salt = await bcrypt.genSalt(10);
                     const hashPassword = await bcrypt.hash(password,salt);
                     const collection  = new staffModal({first_name:first_name,last_name:last_name,user_name:user_name,email:email,position:position,password:hashPassword,department:department});
                     const result = collection.save();
-                    res.send({status:true,message:"Employee Added Successfully"})
+                    res.status(201).send({status:true,message:"Employee Added Successfully"})
                 }
             }else{
-                res.send({status:true,message:"All Fields are Required"})
+                res.status(200).send({status:true,message:"All Fields are Required"})
             }
         } catch (error) {
-            res.send({status:false,message:"Unable to Provide Service"})
+            res.status(501).send({status:false,message:"Unable to Provide Service"})
         }
     }
 }
