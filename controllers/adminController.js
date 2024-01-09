@@ -30,25 +30,34 @@ class AdminControler{
 
     static LoginAdmin = async(req,res) =>{
         const {adminEmail,adminPassword} = req.body;
+        let loginAttemp = 0;
         if(adminEmail && adminPassword){
             try {
+               
                 const admin = await adminModel.findOne({adminEmail:adminEmail});
                 if(admin){
                     let passMatch = await bcrypt.compare(adminPassword,admin.adminPassword);
                     if(admin.adminEmail == adminEmail && passMatch){
-                        let token = jwt.sign({adminId:admin._id},secreateKey,{expiresIn:"1d"});
-                        res.send({status:true,message:"Admin Login Successfull",token:token})
+                        if(loginAttemp === 3){
+                            res.status(200).send({status:false,message:"Access Denied",code : 200})
+                        }else{
+                            let token = jwt.sign({adminId:admin._id},secreateKey,{expiresIn:"1d"});
+                            res.status(201).send({status:true,message:"Admin Access Granted",token:token,code:201})
+                        }
                     }else{
-                        res.send({status:false,message:"Email or Password is wrong !!"})
+                        loginAttemp++;
+                        res.status(200).send({status:false,message:"Email or Password is wrong !!",code:501,loginAttemp:loginAttemp})
                     }
                 }else{
-                    res.send({status:false,message:"Admin does not Exists"})
+                    loginAttemp++;
+                    res.status(200).send({status:false,message:"Access Denied",code:501,loginAttemp:loginAttemp})
                 }
             }catch (err) {
-                res.send({status:false,message:err});
+                res.status(404).send({status:false,message:err});
             }
         }else{
-            res.send({status:false,message:"Admin's Email and Password is required"})
+            loginAttemp++;
+            res.status(501).send({status:false,message:"Admin's Email and Password is required",code : 501,loginAttemp:loginAttemp})
         }
     }
 
