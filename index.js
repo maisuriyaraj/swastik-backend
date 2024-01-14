@@ -11,6 +11,9 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 // use Api Cross Platform
 app.use(cors());
+// Serve static files from the 'customers' directory
+app.use('/customers', express.static('customers'));
+
 //Load Routes
 app.use("/api",router);
 

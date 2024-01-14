@@ -14,18 +14,18 @@ class EmployeesControl{
                     let passMatch = await bcrypt.compare(password,employee.password);
                     if(employee.email == email && passMatch){
                         let token = jwt.sign({empID:employee._id},secreateKey,{expiresIn:"1d"});
-                        res.send({status:true,message:"Employee logged in successfully.",token:token});
+                        res.status(201).send({status:true,message:"Employee logged in successfully.",token:token,code:201});
                     }else{
-                        res.send({status:false,message:"Email or password is not Correcct"});
+                        res.status(200).send({status:false,message:"Email or password is not Correcct",code:501});
                     }
                 }else{
-                    res.send({status:false,message:"You're Unauthorized Person"});
+                    res.status(200).send({status:false,message:"You're Unauthorized Person",code : 501});
                 }
             }else{
-                res.send({status:false,message:"email and Staff Password is required"})
+                res.status(200).send({status:false,message:"email and Staff Password is required",code : 501})
             }      
         } catch (error) {
-            res.send({status:false,message:"Unable to provide service"})
+            res.status(404).send({status:false,message:"Unable to provide service"})
         }
     }
 }
