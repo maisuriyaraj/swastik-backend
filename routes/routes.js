@@ -3,7 +3,7 @@ import AdminControler from "../controllers/adminController.js";
 import verifyAdminToken from "../Middlewares/adminMiddlewares.js";
 import EmployeesControl from "../controllers/employeesController.js";
 import {CustomerControll} from "../controllers/customerController.js";
-import { uploadCUstomersDocument } from "../Middlewares/customersMiddlewares.js";
+import { handleUploadsFile, updateCustomerDocuments, uploadCUstomersDocument, verifyCustomerToken } from "../Middlewares/customersMiddlewares.js";
 const router = express.Router();
 
 // Admin Routes
@@ -17,7 +17,10 @@ router.post("/staff-login", EmployeesControl.LoginStaff);
 
 
 // Customer Routes 
-const uploads = uploadCUstomersDocument();
+const uploads = handleUploadsFile();
 router.post("/registration", CustomerControll.CustomerRegistration);
-router.post("/upload/:customer_id/:document_type",uploads.single("uploaded_file"),CustomerControll.UploadBankingDocuments);
+router.post("/upload/:customer_id/:document_type",uploadCUstomersDocument,uploads.single("uploaded_file"),CustomerControll.UploadBankingDocuments);
+router.put("/update-docs/:customer_id/:document_type",verifyCustomerToken,updateCustomerDocuments,uploads.single("update_file"),CustomerControll.UpdateDocuments);
+router.get("/email-verify",CustomerControll.SendVerificationEmail);
+
 export { router };

@@ -12,7 +12,7 @@ app.use(express.json());
 // use Api Cross Platform
 app.use(cors());
 // Serve static files from the 'customers' directory
-app.use('/customers', express.static('customers'));
+app.use('/customers/documents', express.static('customers/documents'));
 
 //Load Routes
 app.use("/api",router);
