@@ -10,6 +10,12 @@ export const getHashPassword = async (password) => {
 
 }
 
+
+export const comparePasswords = async (pass1,pass2) =>{
+  let isMatch = await bcrypt.compare(pass1,pass2);
+  return isMatch;
+}
+
 export const getEmailBody = (otp) => {
   if (otp) {
     const emailBody = `
@@ -39,6 +45,8 @@ export const getEmailBody = (otp) => {
 }
 
 export const generateOtp = () => {
-  const otpGen = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false, lowerCaseAlphabets: false });
-  return otpGen
+
+   // Generate a random 6-digit number
+   const otp = Math.floor(100000 + Math.random() * 900000);
+   return otp.toString();
 }

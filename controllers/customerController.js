@@ -3,18 +3,20 @@ import "dotenv/config";
 import customerModel from "../models/customersModel.js";
 import DocumentModel from "../models/customer_documents.js";
 import moment from "moment";
+import bcrypt from "bcrypt"
 import multer from "multer";
-import { getEmailBody, getHashPassword,generateOtp } from "../utils/helperFunctions.js";
+import { getEmailBody, getHashPassword,generateOtp,comparePasswords } from "../utils/helperFunctions.js";
 import nodemailer from "nodemailer";
 
 
 
 
 const secreatKey = process.env.SCREATE_KEY;
-const otpGEn = generateOtp();
+let otpEmail = {
+    otp:""
+};
 export class CustomerControll {
     constructor() {
-
     }
     static CustomerRegistration = async (req, res) => {
         const {
@@ -35,13 +37,14 @@ export class CustomerControll {
         if (req.body) {
             try {
                 const registered = await customerModel.findOne({ $or: [{ email: email }, { adhar_number: adhar_number }, { pan_number: pan_number }] });
+                console.log(otpEmail?.otp +  " + " +  otp)
+                console.log(registered)
                 if (registered && registered !== null) {
                     if (registered.adhar_number == adhar_number) {
                         res.status(200).send({ status: false, message: "Your Adhar Number is already registered" });
                     } else if (registered.pan_number == pan_number) {
                         res.status(200).send({ status: false, message: "Your Pan Number is already registered" });
                     }
-
                     else if (registered.email == email) {
                         res.status(200).send({ status: false, message: "Your Email is already registered" });
                     } else {
@@ -63,7 +66,7 @@ export class CustomerControll {
                         adhar_number: adhar_number,
                         accept_Terms: accept_Terms
                     });
-                    if(otp == otpGEn){
+                    if(otp == otpEmail.otp){
                         const result = await collection.save();
                     const token = jwt.sign({ userData: collection }, secreatKey, { expiresIn: "1d" });
                     res.status(201).send({ status: true, message: "Customer Registered Successfully", token: token });
@@ -106,6 +109,7 @@ export class CustomerControll {
 
     static SendVerificationEmail = async (req, res) => {
         try {
+            otpEmail.otp = generateOtp();
             const { email } = req.body;
             // Generate SMTP service account from ethereal.email
             nodemailer.createTestAccount((err, account) => {
@@ -130,7 +134,7 @@ export class CustomerControll {
                     to: `Recipient <${email}>`,
                     subject: 'Nodemailer is unicode friendly ✔',
                     // text: 'HELLO I AM RAJ MAISURIYA!',
-                    html: getEmailBody(otpGEn)
+                    html: getEmailBody( otpEmail.otp)
                 };
                 transporter.sendMail(message, (err, info) => {
                     if (err) {
@@ -143,5 +147,35 @@ export class CustomerControll {
         } catch (error) {
             res.send({status:false,message:"Unable to provide service"})
         }
+    }
+
+    static LoginCustomer = async(req,res) => {
+
+        const {email,password} = req.body;
+        try {
+            if(email && password){
+                    const collection = await customerModel.findOne({email:email});
+                    if(collection && collection !== null){
+                        const isPasswordMatch = await  comparePasswords(password,collection.password);
+                        console.log(isPasswordMatch)
+                        if(collection.email == email && isPasswordMatch){
+                            const token = jwt.sign({ userData: collection }, secreatKey, { expiresIn: "1d" });
+                            res.status(201).send({status:true,message:"User Logged In successfully",token:token})
+                        }else{
+                            res.status(200).send({status:false,message:"Email or password are Incorrect !!"});
+                        }
+                    }else{
+                        res.status(200).send({status:false,message:"User doesn't exists"});
+                    }
+            }else{
+                res.send({status:false,message : `Email and Password is Required !!`})
+            }    
+        } catch (error) {
+            console.log(error)
+            res.status(501).send({status:false,message : error})
+            
+        }
+        
+
     }
 }

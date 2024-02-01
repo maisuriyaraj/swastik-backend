@@ -21,6 +21,7 @@ const uploads = handleUploadsFile();
 router.post("/registration", CustomerControll.CustomerRegistration);
 router.post("/upload/:customer_id/:document_type",uploadCUstomersDocument,uploads.single("uploaded_file"),CustomerControll.UploadBankingDocuments);
 router.put("/update-docs/:customer_id/:document_type",verifyCustomerToken,updateCustomerDocuments,uploads.single("update_file"),CustomerControll.UpdateDocuments);
-router.get("/email-verify",CustomerControll.SendVerificationEmail);
+router.post("/email-verify",CustomerControll.SendVerificationEmail);
+router.post("/login-customer",CustomerControll.LoginCustomer);
 
 export { router };
