@@ -10,10 +10,11 @@ const router = express.Router();
 router.post("/add-admin", AdminControler.AddAdmin);
 router.post("/admin", AdminControler.LoginAdmin);
 router.post("/add-staff", verifyAdminToken, AdminControler.AddEmployees);
+router.get("/getCustomers",verifyAdminToken,AdminControler.getCustomers);
 
 // Employees Routes
 router.post("/staff-login", EmployeesControl.LoginStaff);
-
+router.get("/home",(req,res)=>{res.send("HELLO ")});
 
 
 // Customer Routes 

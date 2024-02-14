@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import 'dotenv/config';
 import staffModal from "../models/employeesModel.js";
+import customerModel from "../models/customersModel.js";
 
 const secreateKey = process.env.SCREATE_KEY;
 class AdminControler{
@@ -80,6 +81,15 @@ class AdminControler{
             }
         } catch (error) {
             res.status(501).send({status:false,message:"Unable to Provide Service"})
+        }
+    }
+
+    static getCustomers = async(req,res) =>{
+        try {
+            const customers_list = await customerModel.find({});
+            res.status(201).send({status:true,message:"All Customer's Data Fetch Successfully",data:customers_list});
+        } catch (error) {
+            res.status(200).send({status:false,message:"Something went wrong !!",status:501});
         }
     }
 }
