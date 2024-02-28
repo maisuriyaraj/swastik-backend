@@ -9,8 +9,12 @@ import {router} from "./routes/routes.js";
 const app = express();
 const port = process.env.PORT || 5000;
 app.use(express.json());
+app.use(express.urlencoded({extended:false}));
 // use Api Cross Platform
-app.use(cors());
+const corsOptions = {
+    methods: ['GET', 'POST','PUT','DELETE'] // Specify the allowed HTTP methods
+  };
+app.use(cors(corsOptions));
 // Serve static files from the 'customers' directory
 app.use('/customers/documents', express.static('customers/documents'));
 

@@ -9,11 +9,10 @@ export const uploadCUstomersDocument = async(req,res,next) => {
     try {
 
         //check for existing documents 
-        const {customer_id,document_type} = req.params;
-        const result = await DocumentModel.findOne({customer_id:customer_id,document_type:document_type});
+        const {customer_id} = req.params;
+        const result = await DocumentModel.findOne({customer_id:customer_id});
         if(result && result != null){
-            res.send({status:false,message:`Your ${document_type} is Already Uploaded`});
-           
+            res.send({status:false,message:`Your Documents is Already Uploaded`});
         }else{
             // IF condition is false then it will allow you to execute next Middleware.
             next();
@@ -44,14 +43,17 @@ export const handleUploadsFile  = (req) =>{
             return cb(null, "./customers/documents");
         },
         filename: (req, file, cb) => {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
             const  customer_id = req.params.customer_id;
-            const document_type = req.params.document_type;
-            const filename =customer_id + '-' +document_type+".jpg"
+            const filename =customer_id + `-swastik-${uniqueSuffix}`+".pdf"
             return cb(null, filename);
         }
     })
-    const uploadDocs = multer({ storage });
-    return uploadDocs
+    const uploadDocs = multer({ storage }).fields([
+        { name: 'file1', maxCount: 1 },
+        { name: 'file2', maxCount: 1 }
+    ]);
+    return uploadDocs;
 }
 
 

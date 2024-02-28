@@ -1,9 +1,12 @@
 import mongoose from "mongoose";
 
+const docs = new mongoose.Schema({
+    doc_path:{type:String},
+    doc_type:{type:String},
+})
 const DocumentsSchema = new mongoose.Schema({
     customer_id:{type:String},
-    document_path:{type:String},
-    document_type:{type:String}
+    document:[docs]
 })
 
 
