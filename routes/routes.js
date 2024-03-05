@@ -20,6 +20,7 @@ router.post('/admin-activities',verifyAdminToken,AdminControler.getAdminActiviti
 
 // Employees Routes
 router.post("/staff-login", EmployeesControl.LoginStaff);
+router.post("/getEmpList",EmployeesControl.getEmployeesList);
 
 // Customer Routes 
 const uploads = handleUploadsFile();
@@ -30,6 +31,7 @@ router.post("/forgotPassEmail",CustomerControll.SendVerificationEmail);
 router.post("/login-customer",CustomerControll.LoginCustomer);
 router.post("/getaccountsList",getAccountList);
 router.post("/getCustomer",verifyAdminToken,CustomerControll.GetCustomerDetails);
+router.post("/getCustomerDetails",verifyCustomerToken,CustomerControll.GetCustomerDetails);
 router.post("/getCustomerDocs",verifyAdminToken,CustomerControll.getCustomerDocs);
 router.post("/userOtpVerification",CustomerControll.checkUSerOTP);
 

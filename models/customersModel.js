@@ -16,6 +16,7 @@ const CustomerSchema = new mongoose.Schema({
     account_number:{type:String,require:true},
     nationality:{type:String,require:true,default:"Indian"},
     marital_status:{type:String},
+    current_balance:{type:Number,default:0}
 });
 
 const customerModel = mongoose.model("customers",CustomerSchema);

@@ -5,7 +5,7 @@ const docs = new mongoose.Schema({
     doc_type:{type:String},
 })
 const DocumentsSchema = new mongoose.Schema({
-    customer_id:{type:String},
+    customer_id:{type:mongoose.Schema.Types.ObjectId,required:true,ref:'customers'},
     document:[docs]
 })
 

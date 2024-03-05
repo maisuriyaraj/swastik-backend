@@ -28,6 +28,15 @@ class EmployeesControl{
             res.status(404).send({status:false,message:"Unable to provide service"})
         }
     }
+
+    static getEmployeesList = async (req,res) =>{
+        try {
+            const employees = await staffModal.find().populate('dept_id'); // Foreign key FIELD NAME 
+            res.send(employees);
+        } catch (error) {
+            console.log(error);
+        }
+    }
 }
 
 export default EmployeesControl;

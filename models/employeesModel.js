@@ -12,7 +12,7 @@ const staffSchema = new mongoose.Schema({
     doj:{type:String,required:true},
     salary:{type:Number,required:true},
     education:{type:String,required:true},
-    dept_id:{type:String,required:true},
+    dept_id:{type:mongoose.Schema.Types.ObjectId,required:true,ref:'bank_depts'},// PASS COLLECTIOB NAME 
     address:{type:String,required:true}
 })
 

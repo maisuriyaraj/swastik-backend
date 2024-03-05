@@ -268,10 +268,11 @@ export class CustomerControll {
         const { id } = req.body;
         try {
             if (id) {
-                const customer = await DocumentModel.findOne({ customer_id: id });
+                const customer = await DocumentModel.findOne({ customer_id: id }).populate('customer_id');
                 if (customer != null && customer != {}) {
                     res.status(201).send({ status: true, message: "Customer's Documents Fetch successfully !", code: 201, data: customer });
                 } else {
+                    console.log(customer)
                     res.status(200).send({ status: false, message: "Customer Not Found", code: 200 });
                 }
             } else {
