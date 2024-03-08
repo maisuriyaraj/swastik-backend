@@ -6,6 +6,7 @@ import {CustomerControll} from "../controllers/customerController.js";
 import { handleUploadsFile, updateCustomerDocuments, uploadCUstomersDocument, verifyCustomerToken } from "../Middlewares/customersMiddlewares.js";
 import { getAccountList, getBankDepartments } from "../controllers/otherAPis.js";
 import multer from "multer";
+import verifyStaffToken from "../Middlewares/employeesMiddlewares.js";
 const router = express.Router();
 
 // Admin Routes
@@ -16,11 +17,12 @@ router.post("/add-staff", verifyAdminToken, AdminControler.AddEmployees);
 router.post("/getCustomers",verifyAdminToken,AdminControler.getCustomers);
 router.post("/getdepts",verifyAdminToken,getBankDepartments);
 router.put('/adminLogout',AdminControler.Logout)
-router.post('/admin-activities',verifyAdminToken,AdminControler.getAdminActivities)
+router.post('/admin-activities',verifyAdminToken,AdminControler.getAdminActivities);
 
 // Employees Routes
 router.post("/staff-login", EmployeesControl.LoginStaff);
-router.post("/getEmpList",EmployeesControl.getEmployeesList);
+router.post("/getEmpList",verifyStaffToken,EmployeesControl.getEmployeesList);
+router.put("/deposit-cash",verifyStaffToken,CustomerControll.DepositCashAmount)
 
 // Customer Routes 
 const uploads = handleUploadsFile();
@@ -34,6 +36,8 @@ router.post("/getCustomer",verifyAdminToken,CustomerControll.GetCustomerDetails)
 router.post("/getCustomerDetails",verifyCustomerToken,CustomerControll.GetCustomerDetails);
 router.post("/getCustomerDocs",verifyAdminToken,CustomerControll.getCustomerDocs);
 router.post("/userOtpVerification",CustomerControll.checkUSerOTP);
+router.post('/add-wallet',verifyCustomerToken,CustomerControll.AddWallet);
+
 
 
 export { router };

@@ -133,7 +133,6 @@ class AdminControler {
                 startTime: moment().format("hh:mm")
             });
             const collection = await result.save();
-            console.log(collection)
         } catch (error) {
             console.log(error)
         }
