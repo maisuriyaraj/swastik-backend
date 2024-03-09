@@ -231,7 +231,7 @@ export const getDepositEmailBody = (name,deposit_amt,current_balance) => {
             <li><strong>Current balance :</strong>${current_balance}</li>
         </ul>
         <p>We understand the importance of timely and accurate transactions, and we are committed to providing you with the best service possible. Should you have any questions or concerns regarding your deposit or any other banking matter, please do not hesitate to contact us. Our dedicated team is here to assist you every step of the way.</p>
-        <p>Thank you for choosing [Your Company/Bank Name]. We value your trust and look forward to serving you in the future.</p>
+        <p>Thank you for choosing Swastik Finance. We value your trust and look forward to serving you in the future.</p>
         <br>
         <p>Best regards,</p>
         <p>Swastik Finance</p>

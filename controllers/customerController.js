@@ -253,6 +253,26 @@ export class CustomerControll {
         }
     }
 
+    static ResetUserPassword = async(req,res) => {
+        const {password,customer_id} = req.body;
+        try {
+            if(password && customer_id){
+                let collection = await customerModel.findOne({_id:customer_id});
+                if(collection !== null){
+                    let hashPass = await getHashPassword(password); 
+                    let result = await customerModel.updateOne({_id:customer_id},{$set : {password:hashPass}});
+                    res.send({status:true,message:"Password updated successfully !",code : 201})
+                }else{
+                    res.send({status:false,message:"Customer Not Found !!",code : 501})
+                }
+            }else{
+                res.send({status:false,message:"All Fields are Required !",code : 200})
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
     static LoginCustomer = async (req, res) => {
         const { email, password } = req.body;
         try {
@@ -326,7 +346,7 @@ export class CustomerControll {
                 if(customer !== null ){
                     if(customer.account_number === account_number){
                         const result = await customerModel.updateOne({_id:customer_id},{$set:{current_balance:customer.current_balance + deposit_amount}});
-                        this.StoreTransectionHistory({customer_id,deposit_amount,current_balance : customer.current_balance + deposit_amount});
+                        this.StoreDepositTransectionHistory({customer_id,deposit_amount,current_balance : customer.current_balance + deposit_amount});
                         nodemailer.createTestAccount((err, account) => {
                             if (err) {
                                 console.error('Failed to create a testing account. ' + err.message);
@@ -374,10 +394,109 @@ export class CustomerControll {
         }
     }
 
-    static StoreTransectionHistory = async ({customer_id,deposit_amount,current_balance}) =>{
+    static WithdrawCashAmount = async (req,res) =>{
+        const {customer_id,withdraw_amount,account_number,emp_id} = req.body;
         try {
-            const collection = new TransectionModel({customer_id:customer_id,transections:[{date_of_transection:moment().format("DD-MM-YYYY"),date_of_time:moment().format("hh:mm"),deposit_amount:deposit_amount,current_balance:current_balance}]});
-            const result = await collection.save();
+            if(customer_id && withdraw_amount && account_number && emp_id){
+                const customer = await customerModel.findOne({_id:customer_id});
+                if(customer !== null ){
+                    if(customer.account_number === account_number){
+                       if(customer.current_balance <= 500  || customer.current_balance <= withdraw_amount){
+                            res.send({status:false,message:"Your Bank Balance is not sufficient !!",code:200});
+                       }else{
+                        const result = await customerModel.updateOne({_id:customer_id},{$set:{current_balance:customer.current_balance - withdraw_amount}});
+                        this.StoreWithdrawTransectionHistory({customer_id,withdraw_amount,current_balance : customer.current_balance - withdraw_amount});
+                        nodemailer.createTestAccount((err, account) => {
+                            if (err) {
+                                console.error('Failed to create a testing account. ' + err.message);
+                                return process.exit(1);
+                            }
+                            // Create a SMTP transporter object
+                            const transporter = nodemailer.createTransport({
+                                host: 'smtp.gmail.com',
+                                port: 587,
+                                secure: false,
+                                auth: {
+                                    user: 'rajmaisuria111@gmail.com',
+                                    pass: 'pmks qvya coug ekih'
+                                }
+                            });
+        
+                            // Message object
+                            let message = {
+                                from: `Sender Name <swastikfinance@gmail.com>`,
+                                to: `Recipient <${customer.email}>`,
+                                subject: 'Your Deposit Amount has been Credited !!',
+                                // text: 'HELLO I AM RAJ MAISURIYA!',
+                                html: getDepositEmailBody(customer.first_name,withdraw_amount,customer.current_balance - withdraw_amount)
+                            };
+                            transporter.sendMail(message, (err, info) => {
+                                if (err) {
+                                    console.log('Error occurred. ' + err.message);
+                                    return process.exit(1);
+                                }
+                            });
+                        });
+                        res.send({status:true,message:`Your Rs.${withdraw_amount} has been Debited !! `,code : 201});
+                       }
+                    }else{
+                        res.send({status:false,message:"Account Number is not correct !!",code : 200});
+                    }
+                }else{
+                    res.status(501).send({status:false,message:"Customer Not Found",code : 200})
+                }
+            }else{
+                res.status(501).send({status:false,message:"All Fields are Required !!",code : 200});
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(501).send({status:false,message:error})
+        }
+    }
+
+    static StoreDepositTransectionHistory = async ({customer_id,deposit_amount,current_balance}) =>{
+        try {
+            const transections = await TransectionModel.findOne({customer_id:customer_id});
+            if(transections == null){
+                const collection = new TransectionModel({customer_id:customer_id,transections:[{date_of_transection:moment().format("DD-MM-YYYY"),date_of_time:moment().format("hh:mm"),deposit_amount:deposit_amount,current_balance:current_balance}]});
+                const result = await collection.save();
+            }else{
+                let AllTransections = transections.transections || [];
+                let newTransection = {
+                    date_of_transection:moment().format("DD-MM-YYYY"),
+                    date_of_time:moment().format("hh:mm"),
+                    deposit_amount:deposit_amount,
+                    current_balance:current_balance
+                }
+                AllTransections.push(newTransection);
+                console.log(AllTransections)
+                const collection = await  TransectionModel.updateOne({customer_id:customer_id},{$set:{transections:AllTransections}});
+                console.log(collection)
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    static StoreWithdrawTransectionHistory = async ({customer_id,withdraw_amount,current_balance}) =>{
+        try {
+            const transections = await TransectionModel.findOne({customer_id:customer_id});
+            if(transections == null){
+                const collection = new TransectionModel({customer_id:customer_id,transections:[{date_of_transection:moment().format("DD-MM-YYYY"),date_of_time:moment().format("hh:mm"),deposit_amount:deposit_amount,current_balance:current_balance}]});
+                const result = await collection.save();
+            }else{
+                let AllTransections = transections.transections || [];
+                let newTransection = {
+                    date_of_transection:moment().format("DD-MM-YYYY"),
+                    date_of_time:moment().format("hh:mm"),
+                    withdraw_amount:withdraw_amount,
+                    current_balance:current_balance
+                }
+                AllTransections.push(newTransection);
+                console.log(AllTransections)
+                const collection = await  TransectionModel.updateOne({customer_id:customer_id},{$set:{transections:AllTransections}});
+                console.log(collection)
+            }
         } catch (error) {
             console.log(error)
         }
@@ -454,6 +573,8 @@ export class CustomerControll {
             console.log(error)
         }
     }
+
+
 
     static SetCustomerActivities = async (id,url, method, body, params, message) => {
         try {

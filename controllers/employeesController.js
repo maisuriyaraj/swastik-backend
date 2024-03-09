@@ -14,7 +14,7 @@ class EmployeesControl{
                     let passMatch = await bcrypt.compare(password,employee.password);
                     if(employee.email == email && passMatch){
                         let token = jwt.sign({empID:employee._id},secreateKey,{expiresIn:"1d"});
-                        res.status(201).send({status:true,message:"Employee logged in successfully.",token:token,code:201});
+                        res.status(201).send({status:true,message:"Employee logged in successfully.",token:token,emp:employee._id,code:201});
                     }else{
                         res.status(200).send({status:false,message:"Email or password is not Correcct",code:501});
                     }
@@ -35,6 +35,25 @@ class EmployeesControl{
             res.send(employees);
         } catch (error) {
             console.log(error);
+        }
+    }
+
+    static getmployee = async (req,res) =>{
+        const {id}  = req.body;
+        try {
+            if(id){
+                let result = await staffModal.findOne({_id:id}).populate("dept_id");
+                if(result !== null){
+                    res.status(201).send({status:true,message:"Date Fetched Succcessfully !!",code : 201,data:result});
+                }else{
+                    res.send({status:false,message:"Employee Not Found !!"});
+                }
+            }else{
+                res.send({status:false,message:"Please provide customer id"});
+            }
+        } catch (error) {
+            console.log(error);
+            res.status(501).send({status:false,message:"Unable to provide Service !"})
         }
     }
 }
