@@ -5,12 +5,12 @@ import DocumentModel from "../models/customer_documents.js";
 import moment from "moment";
 import bcrypt, { compare } from "bcrypt"
 import multer from "multer";
-import { getEmailBody, getHashPassword, generateOtp, comparePasswords, getEmailBodyForUploadDocs, WalletEmailBody, getDepositEmailBody } from "../utils/helperFunctions.js";
+import { getEmailBody, getHashPassword, generateOtp, comparePasswords, getEmailBodyForUploadDocs, WalletEmailBody, getDepositEmailBody,getWithdrawEmailBody } from "../utils/helperFunctions.js";
 import nodemailer from "nodemailer";
 import WalletModel from "../models/customerWallet.js";
 import CustomerActivityModel from "../models/customerActivities.js";
 import TransectionModel from "../models/customerTransectionHistory.js";
-
+import mongoose from "mongoose";
 
 
 
@@ -269,8 +269,24 @@ export class CustomerControll {
                 res.send({status:false,message:"All Fields are Required !",code : 200})
             }
         } catch (error) {
-            console.log(error)
+            console.log(error);
+            res.status(501).send({status:false,message:"Unable to provide Service !",code : 501})
         }
+    }
+
+    static getTrasectionsDetails = async(req,res) =>{
+        const {customer_id} = req.body;
+        try {
+            let transections = await TransectionModel.findOne({customer_id:customer_id});
+            if(transections !== null){
+                res.status(201).send({status:true,message:"Date Fetched Successfully",data:transections});
+            }else{
+                res.status(201).send({status:true,message:"No Transection Available !",data:[]});
+            }
+        } catch (error) {
+            console.log(error);
+            res.status(501).send({status:false,message:"Unable to provide Service !",code : 501})
+        } 
     }
 
     static LoginCustomer = async (req, res) => {
@@ -426,9 +442,9 @@ export class CustomerControll {
                             let message = {
                                 from: `Sender Name <swastikfinance@gmail.com>`,
                                 to: `Recipient <${customer.email}>`,
-                                subject: 'Your Deposit Amount has been Credited !!',
+                                subject: `Rs.${withdraw_amount} has been dabited from your account .`,
                                 // text: 'HELLO I AM RAJ MAISURIYA!',
-                                html: getDepositEmailBody(customer.first_name,withdraw_amount,customer.current_balance - withdraw_amount)
+                                html: getWithdrawEmailBody(customer.first_name,withdraw_amount,customer.current_balance - withdraw_amount)
                             };
                             transporter.sendMail(message, (err, info) => {
                                 if (err) {
@@ -458,7 +474,7 @@ export class CustomerControll {
         try {
             const transections = await TransectionModel.findOne({customer_id:customer_id});
             if(transections == null){
-                const collection = new TransectionModel({customer_id:customer_id,transections:[{date_of_transection:moment().format("DD-MM-YYYY"),date_of_time:moment().format("hh:mm"),deposit_amount:deposit_amount,current_balance:current_balance}]});
+                const collection = new TransectionModel({customer_id:customer_id,transections:[{date_of_transection:moment().format("DD-MM-YYYY"),date_of_time:moment().format("hh:mm"),deposit_amount:deposit_amount,message:"Deposite From Bank",current_balance:current_balance}]});
                 const result = await collection.save();
             }else{
                 let AllTransections = transections.transections || [];
@@ -466,23 +482,22 @@ export class CustomerControll {
                     date_of_transection:moment().format("DD-MM-YYYY"),
                     date_of_time:moment().format("hh:mm"),
                     deposit_amount:deposit_amount,
-                    current_balance:current_balance
+                    current_balance:current_balance,
+                    message:"Deposite From Bank"
                 }
                 AllTransections.push(newTransection);
-                console.log(AllTransections)
                 const collection = await  TransectionModel.updateOne({customer_id:customer_id},{$set:{transections:AllTransections}});
-                console.log(collection)
             }
         } catch (error) {
             console.log(error)
         }
     }
 
-    static StoreWithdrawTransectionHistory = async ({customer_id,withdraw_amount,current_balance}) =>{
+    static StoreWithdrawTransectionHistory = async ({customer_id,withdraw_amount,current_balance,message}) =>{
         try {
             const transections = await TransectionModel.findOne({customer_id:customer_id});
             if(transections == null){
-                const collection = new TransectionModel({customer_id:customer_id,transections:[{date_of_transection:moment().format("DD-MM-YYYY"),date_of_time:moment().format("hh:mm"),deposit_amount:deposit_amount,current_balance:current_balance}]});
+                const collection = new TransectionModel({customer_id:customer_id,transections:[{date_of_transection:moment().format("DD-MM-YYYY"),date_of_time:moment().format("hh:mm"),withdraw_amount:withdraw_amount,message:"Withdraw From Bank",current_balance:current_balance}]});
                 const result = await collection.save();
             }else{
                 let AllTransections = transections.transections || [];
@@ -490,10 +505,10 @@ export class CustomerControll {
                     date_of_transection:moment().format("DD-MM-YYYY"),
                     date_of_time:moment().format("hh:mm"),
                     withdraw_amount:withdraw_amount,
-                    current_balance:current_balance
+                    current_balance:current_balance,
+                    message:message || 'Withdrawal'
                 }
                 AllTransections.push(newTransection);
-                console.log(AllTransections)
                 const collection = await  TransectionModel.updateOne({customer_id:customer_id},{$set:{transections:AllTransections}});
                 console.log(collection)
             }
@@ -512,7 +527,6 @@ export class CustomerControll {
                     if(comparePIN === true){
                         if (customer.current_balance >= walletBalance) {
                             let customerWallet = await WalletModel.findOne({customer_email : email});
-                            console.log(customerWallet)
                             const customer2 = await customerModel.updateOne({_id:id},{$set:{current_balance:customer.current_balance - walletBalance}});
                             if(customerWallet !== null){ 
                                 let wallet2 = await WalletModel.updateOne({customer_email:email},{$set:{walletBalance : customerWallet.walletBalance + Number(walletBalance) }});
@@ -520,6 +534,7 @@ export class CustomerControll {
                                 let wallet = new WalletModel({ customer: id, customer_email: email, walletBalance: Number(walletBalance),last_updated_date:moment().format('DD/MM/YYYY') });
                                 let result = await wallet.save();
                             }
+                            this.StoreWithdrawTransectionHistory({customer_id:id,withdraw_amount:walletBalance,current_balance : customer.current_balance - walletBalance,message:"For Swastik Wallet"});
                             nodemailer.createTestAccount((err, account) => {
                                 if (err) {
                                     console.error('Failed to create a testing account. ' + err.message);
@@ -572,6 +587,25 @@ export class CustomerControll {
         } catch (error) {
             console.log(error)
         }
+    }
+
+    static getWalletDetails = async (req,res) =>{
+        const {customer_id} = req.body;
+        try {
+            if(customer_id){
+                let result = await WalletModel.findOne({customer:customer_id});
+                if(result){
+                    res.status(201).send({status:true,message:"Date Fetched Successfully",data:result});
+                }else{
+                    res.send({status:false,message:"No Wallet Found,please Create an Wallet"})
+                }
+            }else{
+                res.send({status:false,message:"PLease Provide Customer ID",code : 200});
+            }
+        } catch (error) {
+            console.log(error);
+            res.status(501).send({status:false,message:"Unable to provide Service"})
+        }   
     }
 
 

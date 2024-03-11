@@ -5,7 +5,8 @@ const transectionDetailsSchema = new mongoose.Schema({
     date_of_time:{type:String},
     deposit_amount:{type:Number,default:0},
     withdraw_amount:{type:Number,default:0},
-    current_balance:{type:Number}
+    current_balance:{type:Number},
+    message:{type:String}
 });
 
 const customerTransectionsSchema = new mongoose.Schema({

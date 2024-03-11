@@ -25,6 +25,7 @@ router.post("/getEmpList",verifyStaffToken,EmployeesControl.getEmployeesList);
 router.put("/deposit-cash",verifyStaffToken,CustomerControll.DepositCashAmount);
 router.put("/withdraw-cash",verifyStaffToken,CustomerControll.WithdrawCashAmount);
 router.post("/getEmployee",verifyStaffToken,EmployeesControl.getmployee);
+router.post("/getTransectionsEmployee",verifyStaffToken,CustomerControll.getTrasectionsDetails);
 
 // Customer Routes 
 const uploads = handleUploadsFile();
@@ -39,7 +40,9 @@ router.post("/getCustomerDetails",verifyCustomerToken,CustomerControll.GetCustom
 router.post("/getCustomerDocs",verifyAdminToken,CustomerControll.getCustomerDocs);
 router.post("/userOtpVerification",CustomerControll.checkUSerOTP);
 router.post('/add-wallet',verifyCustomerToken,CustomerControll.AddWallet);
+router.post('/getWalletDetails',verifyCustomerToken,CustomerControll.getWalletDetails);
 router.post("/resetpassword",verifyCustomerToken,CustomerControll.ResetUserPassword);
+router.post("/getTransectionsCustomer",verifyCustomerToken,CustomerControll.getTrasectionsDetails);
 
 
 

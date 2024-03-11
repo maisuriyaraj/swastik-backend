@@ -241,3 +241,36 @@ export const getDepositEmailBody = (name,deposit_amt,current_balance) => {
 
   `
 }
+
+export const getWithdrawEmailBody = (name,withdraw_amt,current_balance) => {
+  return `
+
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Withdraw Amount has been credited!</title>
+</head>
+<body>
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333333;">Withdraw Amount Successfully Credited to Your Account!</h2>
+        <p>Dear ${name},</p>
+        <p>We are thrilled to inform you that your recent withdraw has been successfully credited to your account! This ensures that your financial transactions with us continue to run smoothly, providing you with the convenience and security you deserve.</p>
+        <h3 style="color: #333333;">Withdraw Details:</h3>
+        <ul>
+            <li><strong>Withdraw Amount :</strong> Rs.${withdraw_amt}</li>
+            <li><strong>Date of Withdraw :</strong>${moment().format("DD-MM-YYYY")}</li>
+            <li><strong>Current balance :</strong>${current_balance}</li>
+        </ul>
+        <p>We understand the importance of timely and accurate transactions, and we are committed to providing you with the best service possible. Should you have any questions or concerns regarding your deposit or any other banking matter, please do not hesitate to contact us. Our dedicated team is here to assist you every step of the way.</p>
+        <p>Thank you for choosing Swastik Finance. We value your trust and look forward to serving you in the future.</p>
+        <br>
+        <p>Best regards,</p>
+        <p>Swastik Finance</p>
+    </div>
+</body>
+</html>
+
+  `
+}
