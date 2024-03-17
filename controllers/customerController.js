@@ -5,7 +5,7 @@ import DocumentModel from "../models/customer_documents.js";
 import moment from "moment";
 import bcrypt, { compare } from "bcrypt"
 import multer from "multer";
-import { getEmailBody, getHashPassword, generateOtp, comparePasswords, getEmailBodyForUploadDocs, WalletEmailBody, getDepositEmailBody,getWithdrawEmailBody } from "../utils/helperFunctions.js";
+import { getEmailBody, getHashPassword, generateOtp, comparePasswords, getEmailBodyForUploadDocs, WalletEmailBody, getDepositEmailBody, getWithdrawEmailBody } from "../utils/helperFunctions.js";
 import nodemailer from "nodemailer";
 import WalletModel from "../models/customerWallet.js";
 import CustomerActivityModel from "../models/customerActivities.js";
@@ -116,8 +116,8 @@ export class CustomerControll {
                     //         res.send({ status: true, message: "Email sent Successfully", url: nodemailer.getTestMessageUrl(info) });
                     //     });
                     // });
-                    this.SetCustomerActivities(result._id,req.url, req.method, req.body, req.params, req.message);
-                    res.status(201).send({ status: true, message: "Customer Registered Successfully", token: token, code: 201, url: `/upload-docs/${result._id}/${token}`,user:result._id });
+                    this.SetCustomerActivities(result._id, req.url, req.method, req.body, req.params, req.message);
+                    res.status(201).send({ status: true, message: "Customer Registered Successfully", token: token, code: 201, url: `/upload-docs/${result._id}/${token}`, user: result._id });
                 }
             } catch (error) {
                 console.log(error)
@@ -133,8 +133,8 @@ export class CustomerControll {
         try {
             const { customer_id } = req.params;
             const { documents, doc_type } = req.body;
-            const collection = new DocumentModel({ customer_id: customer_id, document: [{ doc_path: req.files.file1[0].path, doc_type: "adharcard",uploadedDate:moment().format("DD/MM/YYYY") }, { doc_path: req.files.file2[0].path, doc_type: "Pancard",uploadedDate:moment().format("DD/MM/YYYY") }] });
-            const result = await collection.save(); 
+            const collection = new DocumentModel({ customer_id: customer_id, document: [{ doc_path: req.files.file1[0].path, doc_type: "adharcard", uploadedDate: moment().format("DD/MM/YYYY") }, { doc_path: req.files.file2[0].path, doc_type: "Pancard", uploadedDate: moment().format("DD/MM/YYYY") }] });
+            const result = await collection.save();
             res.status(201).send({ status: true, message: "Documents Uploaded Sucessfully" });
         } catch (error) {
             console.log(error)
@@ -149,7 +149,18 @@ export class CustomerControll {
             res.send({ statuc: true, message: `Your ${document_type} is Updated Successfully` });
         } catch (error) {
             res.status(501).send({ status: false, message: "Unable to Providde Service" })
+        }
+    }
 
+    static uploadProfile = async (req,res) =>{
+        try {
+            const { customer_id } = req.params;
+            console.log(req.file)
+            const collection = await customerModel.updateOne({_id:customer_id},{$set:{customer_profile:req.file.path}});
+            res.status(201).send({ status: true, message: "Your Profile Picture Updated successfully !" });
+        } catch (error) {
+            res.status(501).send({status:false,message:"Unable To Provide Service !!"});
+            console.log(error)
         }
     }
 
@@ -193,7 +204,7 @@ export class CustomerControll {
                         res.status(201).send({ status: true, message: "Email sent Successfully", code: 201, otp: otpEmail.otp });
                     });
                 });
-                this.SetCustomerActivities(user._id,req.url, req.method, req.body, req.params, req.message);
+                this.SetCustomerActivities(user._id, req.url, req.method, req.body, req.params, req.message);
                 res.status(201).send({ status: true, message: "Email sent Successfully", code: 201, otp: otpEmail.otp });
             } else {
                 res.send({ status: false, message: "User Email not registered", status: 501 })
@@ -215,7 +226,7 @@ export class CustomerControll {
                             console.error('Failed to create a testing account. ' + err.message);
                             return process.exit(1);
                         }
-    
+
                         // Create a SMTP transporter object
                         const transporter = nodemailer.createTransport({
                             host: 'smtp.gmail.com',
@@ -226,14 +237,14 @@ export class CustomerControll {
                                 pass: 'pmks qvya coug ekih'
                             }
                         });
-    
+
                         // Message object
                         let message = {
                             from: `Sender Name <swastikfinance@gmail.com>`,
                             to: `Recipient <${email}>`,
                             subject: 'Nodemailer is unicode friendly ✔',
                             // text: 'HELLO I AM RAJ MAISURIYA!',
-                            html: getEmailBodyForUploadDocs(user._id,email,token)
+                            html: getEmailBodyForUploadDocs(user._id, email, token)
                         };
                         transporter.sendMail(message, (err, info) => {
                             if (err) {
@@ -243,7 +254,7 @@ export class CustomerControll {
                             res.status(201).send({ status: true, message: "Email sent Successfully", code: 201 });
                         });
                     });
-                    res.status(201).send({ status: true, message: "Email sent Successfully", code: 201})
+                    res.status(201).send({ status: true, message: "Email sent Successfully", code: 201 })
                 } else {
                     res.send({ status: false, message: "Please,Enter Valid OTP." });
                 }
@@ -253,40 +264,40 @@ export class CustomerControll {
         }
     }
 
-    static ResetUserPassword = async(req,res) => {
-        const {password,customer_id} = req.body;
+    static ResetUserPassword = async (req, res) => {
+        const { password, customer_id } = req.body;
         try {
-            if(password && customer_id){
-                let collection = await customerModel.findOne({_id:customer_id});
-                if(collection !== null){
-                    let hashPass = await getHashPassword(password); 
-                    let result = await customerModel.updateOne({_id:customer_id},{$set : {password:hashPass}});
-                    res.send({status:true,message:"Password updated successfully !",code : 201})
-                }else{
-                    res.send({status:false,message:"Customer Not Found !!",code : 501})
+            if (password && customer_id) {
+                let collection = await customerModel.findOne({ _id: customer_id });
+                if (collection !== null) {
+                    let hashPass = await getHashPassword(password);
+                    let result = await customerModel.updateOne({ _id: customer_id }, { $set: { password: hashPass } });
+                    res.send({ status: true, message: "Password updated successfully !", code: 201 })
+                } else {
+                    res.send({ status: false, message: "Customer Not Found !!", code: 501 })
                 }
-            }else{
-                res.send({status:false,message:"All Fields are Required !",code : 200})
+            } else {
+                res.send({ status: false, message: "All Fields are Required !", code: 200 })
             }
         } catch (error) {
             console.log(error);
-            res.status(501).send({status:false,message:"Unable to provide Service !",code : 501})
+            res.status(501).send({ status: false, message: "Unable to provide Service !", code: 501 })
         }
     }
 
-    static getTrasectionsDetails = async(req,res) =>{
-        const {customer_id} = req.body;
+    static getTrasectionsDetails = async (req, res) => {
+        const { customer_id } = req.body;
         try {
-            let transections = await TransectionModel.findOne({customer_id:customer_id});
-            if(transections !== null){
-                res.status(201).send({status:true,message:"Date Fetched Successfully",data:transections});
-            }else{
-                res.status(201).send({status:true,message:"No Transection Available !",data:[]});
+            let transections = await TransectionModel.findOne({ customer_id: customer_id });
+            if (transections !== null) {
+                res.status(201).send({ status: true, message: "Date Fetched Successfully", data: transections });
+            } else {
+                res.status(201).send({ status: true, message: "No Transection Available !", data: [] });
             }
         } catch (error) {
             console.log(error);
-            res.status(501).send({status:false,message:"Unable to provide Service !",code : 501})
-        } 
+            res.status(501).send({ status: false, message: "Unable to provide Service !", code: 501 })
+        }
     }
 
     static LoginCustomer = async (req, res) => {
@@ -299,7 +310,7 @@ export class CustomerControll {
                     const isPinMatch = await comparePasswords(password, collection.pin);
                     if (collection.email == email && isPasswordMatch || isPinMatch) {
                         const token = jwt.sign({ userData: collection }, secreatKey, { expiresIn: "1d" });
-                        this.SetCustomerActivities(collection._id,req.url, req.method, req.body, req.params, req.message);
+                        this.SetCustomerActivities(collection._id, req.url, req.method, req.body, req.params, req.message);
                         res.status(201).send({ status: true, message: "User Logged In successfully", token: token, code: 201, user: collection._id })
                     } else {
                         res.status(200).send({ status: false, message: "Email or password are Incorrect !!", code: 501 });
@@ -354,15 +365,15 @@ export class CustomerControll {
         }
     }
 
-    static DepositCashAmount = async (req,res) =>{
-        const {customer_id,deposit_amount,account_number,emp_id} = req.body;
+    static DepositCashAmount = async (req, res) => {
+        const { customer_id, deposit_amount, account_number, emp_id } = req.body;
         try {
-            if(customer_id && deposit_amount && account_number && emp_id){
-                const customer = await customerModel.findOne({_id:customer_id});
-                if(customer !== null ){
-                    if(customer.account_number === account_number){
-                        const result = await customerModel.updateOne({_id:customer_id},{$set:{current_balance:customer.current_balance + deposit_amount}});
-                        this.StoreDepositTransectionHistory({customer_id,deposit_amount,current_balance : customer.current_balance + deposit_amount});
+            if (customer_id && deposit_amount && account_number && emp_id) {
+                const customer = await customerModel.findOne({ _id: customer_id });
+                if (customer !== null) {
+                    if (customer.account_number === account_number) {
+                        const result = await customerModel.updateOne({ _id: customer_id }, { $set: { current_balance: customer.current_balance + deposit_amount } });
+                        this.StoreDepositTransectionHistory({ customer_id, deposit_amount, current_balance: customer.current_balance + deposit_amount });
                         nodemailer.createTestAccount((err, account) => {
                             if (err) {
                                 console.error('Failed to create a testing account. ' + err.message);
@@ -378,14 +389,14 @@ export class CustomerControll {
                                     pass: 'pmks qvya coug ekih'
                                 }
                             });
-        
+
                             // Message object
                             let message = {
                                 from: `Sender Name <swastikfinance@gmail.com>`,
                                 to: `Recipient <${customer.email}>`,
                                 subject: 'Your Deposit Amount has been Credited !!',
                                 // text: 'HELLO I AM RAJ MAISURIYA!',
-                                html: getDepositEmailBody(customer.first_name,deposit_amount,customer.current_balance + deposit_amount)
+                                html: getDepositEmailBody(customer.first_name, deposit_amount, customer.current_balance + deposit_amount)
                             };
                             transporter.sendMail(message, (err, info) => {
                                 if (err) {
@@ -394,153 +405,39 @@ export class CustomerControll {
                                 }
                             });
                         });
-                        res.send({status:true,message:`Your Rs.${deposit_amount} has been Credited !! `,code : 201});
-                    }else{
-                        res.send({status:false,message:"Account Number is not correct !!",code : 200});
+                        res.send({ status: true, message: `Your Rs.${deposit_amount} has been Credited !! `, code: 201 });
+                    } else {
+                        res.send({ status: false, message: "Account Number is not correct !!", code: 200 });
                     }
-                }else{
-                    res.status(501).send({status:false,message:"Customer Not Found",code : 200})
+                } else {
+                    res.status(501).send({ status: false, message: "Customer Not Found", code: 200 })
                 }
-            }else{
-                res.status(501).send({status:false,message:"All Fields are Required !!",code : 200});
+            } else {
+                res.status(501).send({ status: false, message: "All Fields are Required !!", code: 200 });
             }
         } catch (error) {
             console.log(error)
-            res.status(501).send({status:false,message:error})
+            res.status(501).send({ status: false, message: error })
         }
     }
 
-    static WithdrawCashAmount = async (req,res) =>{
-        const {customer_id,withdraw_amount,account_number,emp_id} = req.body;
+    static WithdrawCashAmount = async (req, res) => {
+        const { customer_id, withdraw_amount, account_number, emp_id } = req.body;
         try {
-            if(customer_id && withdraw_amount && account_number && emp_id){
-                const customer = await customerModel.findOne({_id:customer_id});
-                if(customer !== null ){
-                    if(customer.account_number === account_number){
-                       if(customer.current_balance <= 500  || customer.current_balance <= withdraw_amount){
-                            res.send({status:false,message:"Your Bank Balance is not sufficient !!",code:200});
-                       }else{
-                        const result = await customerModel.updateOne({_id:customer_id},{$set:{current_balance:customer.current_balance - withdraw_amount}});
-                        this.StoreWithdrawTransectionHistory({customer_id,withdraw_amount,current_balance : customer.current_balance - withdraw_amount});
-                        nodemailer.createTestAccount((err, account) => {
-                            if (err) {
-                                console.error('Failed to create a testing account. ' + err.message);
-                                return process.exit(1);
-                            }
-                            // Create a SMTP transporter object
-                            const transporter = nodemailer.createTransport({
-                                host: 'smtp.gmail.com',
-                                port: 587,
-                                secure: false,
-                                auth: {
-                                    user: 'rajmaisuria111@gmail.com',
-                                    pass: 'pmks qvya coug ekih'
-                                }
-                            });
-        
-                            // Message object
-                            let message = {
-                                from: `Sender Name <swastikfinance@gmail.com>`,
-                                to: `Recipient <${customer.email}>`,
-                                subject: `Rs.${withdraw_amount} has been dabited from your account .`,
-                                // text: 'HELLO I AM RAJ MAISURIYA!',
-                                html: getWithdrawEmailBody(customer.first_name,withdraw_amount,customer.current_balance - withdraw_amount)
-                            };
-                            transporter.sendMail(message, (err, info) => {
-                                if (err) {
-                                    console.log('Error occurred. ' + err.message);
-                                    return process.exit(1);
-                                }
-                            });
-                        });
-                        res.send({status:true,message:`Your Rs.${withdraw_amount} has been Debited !! `,code : 201});
-                       }
-                    }else{
-                        res.send({status:false,message:"Account Number is not correct !!",code : 200});
-                    }
-                }else{
-                    res.status(501).send({status:false,message:"Customer Not Found",code : 200})
-                }
-            }else{
-                res.status(501).send({status:false,message:"All Fields are Required !!",code : 200});
-            }
-        } catch (error) {
-            console.log(error)
-            res.status(501).send({status:false,message:error})
-        }
-    }
-
-    static StoreDepositTransectionHistory = async ({customer_id,deposit_amount,current_balance}) =>{
-        try {
-            const transections = await TransectionModel.findOne({customer_id:customer_id});
-            if(transections == null){
-                const collection = new TransectionModel({customer_id:customer_id,transections:[{date_of_transection:moment().format("DD-MM-YYYY"),date_of_time:moment().format("hh:mm"),deposit_amount:deposit_amount,message:"Deposite From Bank",current_balance:current_balance}]});
-                const result = await collection.save();
-            }else{
-                let AllTransections = transections.transections || [];
-                let newTransection = {
-                    date_of_transection:moment().format("DD-MM-YYYY"),
-                    date_of_time:moment().format("hh:mm"),
-                    deposit_amount:deposit_amount,
-                    current_balance:current_balance,
-                    message:"Deposite From Bank"
-                }
-                AllTransections.push(newTransection);
-                const collection = await  TransectionModel.updateOne({customer_id:customer_id},{$set:{transections:AllTransections}});
-            }
-        } catch (error) {
-            console.log(error)
-        }
-    }
-
-    static StoreWithdrawTransectionHistory = async ({customer_id,withdraw_amount,current_balance,message}) =>{
-        try {
-            const transections = await TransectionModel.findOne({customer_id:customer_id});
-            if(transections == null){
-                const collection = new TransectionModel({customer_id:customer_id,transections:[{date_of_transection:moment().format("DD-MM-YYYY"),date_of_time:moment().format("hh:mm"),withdraw_amount:withdraw_amount,message:"Withdraw From Bank",current_balance:current_balance}]});
-                const result = await collection.save();
-            }else{
-                let AllTransections = transections.transections || [];
-                let newTransection = {
-                    date_of_transection:moment().format("DD-MM-YYYY"),
-                    date_of_time:moment().format("hh:mm"),
-                    withdraw_amount:withdraw_amount,
-                    current_balance:current_balance,
-                    message:message || 'Withdrawal'
-                }
-                AllTransections.push(newTransection);
-                const collection = await  TransectionModel.updateOne({customer_id:customer_id},{$set:{transections:AllTransections}});
-                console.log(collection)
-            }
-        } catch (error) {
-            console.log(error)
-        }
-    }
-
-    static AddWallet = async (req, res) => {
-        const { id, email, walletBalance,mpin } = req.body;
-        try {
-            if (id && email && walletBalance) {
-                const customer = await customerModel.findOne({ email: email });
-                if (customer != null) {
-                    const comparePIN = await comparePasswords(mpin,customer.pin);
-                    if(comparePIN === true){
-                        if (customer.current_balance >= walletBalance) {
-                            let customerWallet = await WalletModel.findOne({customer_email : email});
-                            const customer2 = await customerModel.updateOne({_id:id},{$set:{current_balance:customer.current_balance - walletBalance}});
-                            if(customerWallet !== null){ 
-                                let wallet2 = await WalletModel.updateOne({customer_email:email},{$set:{walletBalance : customerWallet.walletBalance + Number(walletBalance) }});
-                            }else{
-                                let wallet = new WalletModel({ customer: id, customer_email: email, walletBalance: Number(walletBalance),last_updated_date:moment().format('DD/MM/YYYY') });
-                                let result = await wallet.save();
-                            }
-                            this.StoreWithdrawTransectionHistory({customer_id:id,withdraw_amount:walletBalance,current_balance : customer.current_balance - walletBalance,message:"For Swastik Wallet"});
+            if (customer_id && withdraw_amount && account_number && emp_id) {
+                const customer = await customerModel.findOne({ _id: customer_id });
+                if (customer !== null) {
+                    if (customer.account_number === account_number) {
+                        if (customer.current_balance <= 500 || customer.current_balance <= withdraw_amount) {
+                            res.send({ status: false, message: "Your Bank Balance is not sufficient !!", code: 200 });
+                        } else {
+                            const result = await customerModel.updateOne({ _id: customer_id }, { $set: { current_balance: customer.current_balance - withdraw_amount } });
+                            this.StoreWithdrawTransectionHistory({ customer_id, withdraw_amount, current_balance: customer.current_balance - withdraw_amount });
                             nodemailer.createTestAccount((err, account) => {
                                 if (err) {
                                     console.error('Failed to create a testing account. ' + err.message);
                                     return process.exit(1);
                                 }
-   
                                 // Create a SMTP transporter object
                                 const transporter = nodemailer.createTransport({
                                     host: 'smtp.gmail.com',
@@ -551,14 +448,162 @@ export class CustomerControll {
                                         pass: 'pmks qvya coug ekih'
                                     }
                                 });
-   
+
+                                // Message object
+                                let message = {
+                                    from: `Sender Name <swastikfinance@gmail.com>`,
+                                    to: `Recipient <${customer.email}>`,
+                                    subject: `Rs.${withdraw_amount} has been dabited from your account .`,
+                                    // text: 'HELLO I AM RAJ MAISURIYA!',
+                                    html: getWithdrawEmailBody(customer.first_name, withdraw_amount, customer.current_balance - withdraw_amount)
+                                };
+                                transporter.sendMail(message, (err, info) => {
+                                    if (err) {
+                                        console.log('Error occurred. ' + err.message);
+                                        return process.exit(1);
+                                    }
+                                });
+                            });
+                            res.send({ status: true, message: `Your Rs.${withdraw_amount} has been Debited !! `, code: 201 });
+                        }
+                    } else {
+                        res.send({ status: false, message: "Account Number is not correct !!", code: 200 });
+                    }
+                } else {
+                    res.status(501).send({ status: false, message: "Customer Not Found", code: 200 })
+                }
+            } else {
+                res.status(501).send({ status: false, message: "All Fields are Required !!", code: 200 });
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(501).send({ status: false, message: error })
+        }
+    }
+
+    static OnlineTransections = async (req, res) => {
+        const { payer_id, payer_mpin, payee_id, message, amount } = req.body
+        try {
+            if (payer_id && payer_mpin && payee_id && message && amount) {
+                if (amount < 10000) {
+                    const payer = await customerModel.findOne({ _id: payer_id });
+                    const payment_receiver = await customerModel.findOne({_id:payee_id});
+                    const isAuthenticated = await comparePasswords(payer_mpin, payer.pin)
+                    if (isAuthenticated) {
+                        if (amount < payer.current_balance) {
+                            const payerUpdated = await customerModel.updateOne({ _id: payer_id }, { $inc: { current_balance: -amount } });
+                            this.StoreWithdrawTransectionHistory({ customer_id : payer_id, withdraw_amount : amount, current_balance: payer.current_balance - amount, message: message });
+                            const payee = await customerModel.updateOne({ _id: payee_id }, { $inc: { current_balance: amount } })
+                            this.StoreDepositTransectionHistory({ customer_id:payee_id, deposit_amount : amount, current_balance: payment_receiver.current_balance + amount });
+                            res.status(201).send({ status: true, message: "Your Transection is Successfull !", code: 201 });
+                        } else {
+                            res.send({status:false,message:"Your Bank Balance is not Sufficient !"})
+                        }
+                    } else {
+                        res.status(200).send({ status: false, message: "Mpin is Not Correct", code: 501 });
+                    }
+                } else {
+                    res.send({ status: false, message: "You can't Pay more than Rs.10,000" });
+                }
+            } else {
+                res.status(501).send({ status: false, message: "All Fields Are Required !!" });
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(501).send({ status: false, message: error })
+        }
+
+    }
+
+    static StoreDepositTransectionHistory = async ({ customer_id, deposit_amount, current_balance }) => {
+        try {
+            const transections = await TransectionModel.findOne({ customer_id: customer_id });
+            if (transections == null) {
+                const collection = new TransectionModel({ customer_id: customer_id, transections: [{ date_of_transection: moment().format("DD-MM-YYYY"), date_of_time: moment().format("hh:mm"), deposit_amount: deposit_amount, message: "Deposite From Bank", current_balance: current_balance }] });
+                const result = await collection.save();
+            } else {
+                let AllTransections = transections.transections || [];
+                let newTransection = {
+                    date_of_transection: moment().format("DD-MM-YYYY"),
+                    date_of_time: moment().format("hh:mm"),
+                    deposit_amount: deposit_amount,
+                    current_balance: current_balance,
+                    message: "Deposite From Bank"
+                }
+                AllTransections.push(newTransection);
+                const collection = await TransectionModel.updateOne({ customer_id: customer_id }, { $set: { transections: AllTransections } });
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    static StoreWithdrawTransectionHistory = async ({ customer_id, withdraw_amount, current_balance, message }) => {
+        try {
+            const transections = await TransectionModel.findOne({ customer_id: customer_id });
+            if (transections == null) {
+                const collection = new TransectionModel({ customer_id: customer_id, transections: [{ date_of_transection: moment().format("DD-MM-YYYY"), date_of_time: moment().format("hh:mm"), withdraw_amount: withdraw_amount, message: "Withdraw From Bank", current_balance: current_balance }] });
+                const result = await collection.save();
+            } else {
+                let AllTransections = transections.transections || [];
+                let newTransection = {
+                    date_of_transection: moment().format("DD-MM-YYYY"),
+                    date_of_time: moment().format("hh:mm"),
+                    withdraw_amount: withdraw_amount,
+                    current_balance: current_balance,
+                    message: message || 'Withdrawal'
+                }
+                AllTransections.push(newTransection);
+                const collection = await TransectionModel.updateOne({ customer_id: customer_id }, { $set: { transections: AllTransections } });
+                console.log(collection)
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    static AddWallet = async (req, res) => {
+        const { id, email, walletBalance, mpin } = req.body;
+        try {
+            if (id && email && walletBalance) {
+                const customer = await customerModel.findOne({ email: email });
+                if (customer != null) {
+                    const comparePIN = await comparePasswords(mpin, customer.pin);
+                    if (comparePIN === true) {
+                        if (customer.current_balance >= walletBalance) {
+                            let customerWallet = await WalletModel.findOne({ customer_email: email });
+                            const customer2 = await customerModel.updateOne({ _id: id }, { $set: { current_balance: customer.current_balance - walletBalance } });
+                            if (customerWallet !== null) {
+                                let wallet2 = await WalletModel.updateOne({ customer_email: email }, { $set: { walletBalance: customerWallet.walletBalance + Number(walletBalance) } });
+                            } else {
+                                let wallet = new WalletModel({ customer: id, customer_email: email, walletBalance: Number(walletBalance), last_updated_date: moment().format('DD/MM/YYYY') });
+                                let result = await wallet.save();
+                            }
+                            this.StoreWithdrawTransectionHistory({ customer_id: id, withdraw_amount: walletBalance, current_balance: customer.current_balance - walletBalance, message: "For Swastik Wallet" });
+                            nodemailer.createTestAccount((err, account) => {
+                                if (err) {
+                                    console.error('Failed to create a testing account. ' + err.message);
+                                    return process.exit(1);
+                                }
+
+                                // Create a SMTP transporter object
+                                const transporter = nodemailer.createTransport({
+                                    host: 'smtp.gmail.com',
+                                    port: 587,
+                                    secure: false,
+                                    auth: {
+                                        user: 'rajmaisuria111@gmail.com',
+                                        pass: 'pmks qvya coug ekih'
+                                    }
+                                });
+
                                 // Message object
                                 let message = {
                                     from: `Sender Name <swastikfinance@gmail.com>`,
                                     to: `Recipient <${email}>`,
                                     subject: 'Nodemailer is unicode friendly ✔',
                                     // text: 'HELLO I AM RAJ MAISURIYA!',
-                                    html: WalletEmailBody(customer.first_name + " " + customer.last_name,walletBalance)
+                                    html: WalletEmailBody(customer.first_name + " " + customer.last_name, walletBalance)
                                 };
                                 transporter.sendMail(message, (err, info) => {
                                     if (err) {
@@ -570,14 +615,14 @@ export class CustomerControll {
                                     res.send({ status: true, message: "Email sent Successfully", url: nodemailer.getTestMessageUrl(info) });
                                 });
                             });
-                            res.status(201).send({status:true,message:"You Wallet Has been Updated !!",code : 201});
+                            res.status(201).send({ status: true, message: "You Wallet Has been Updated !!", code: 201 });
                         } else {
                             res.send({ status: false, code: 200, message: "your Bank Balance is not sufficiant !!" });
                         }
-                    }else{
-                        res.send({status:false,message:"MPIN is Not Correct !!"})
+                    } else {
+                        res.send({ status: false, message: "MPIN is Not Correct !!" })
                     }
-                    
+
                 } else {
                     res.status(501).send({ status: false, message: "Customer doen't Exists", code: 200 })
                 }
@@ -589,31 +634,31 @@ export class CustomerControll {
         }
     }
 
-    static getWalletDetails = async (req,res) =>{
-        const {customer_id} = req.body;
+    static getWalletDetails = async (req, res) => {
+        const { customer_id } = req.body;
         try {
-            if(customer_id){
-                let result = await WalletModel.findOne({customer:customer_id});
-                if(result){
-                    res.status(201).send({status:true,message:"Date Fetched Successfully",data:result});
-                }else{
-                    res.send({status:false,message:"No Wallet Found,please Create an Wallet"})
+            if (customer_id) {
+                let result = await WalletModel.findOne({ customer: customer_id });
+                if (result) {
+                    res.status(201).send({ status: true, message: "Date Fetched Successfully", data: result });
+                } else {
+                    res.send({ status: false, message: "No Wallet Found,please Create an Wallet" })
                 }
-            }else{
-                res.send({status:false,message:"PLease Provide Customer ID",code : 200});
+            } else {
+                res.send({ status: false, message: "PLease Provide Customer ID", code: 200 });
             }
         } catch (error) {
             console.log(error);
-            res.status(501).send({status:false,message:"Unable to provide Service"})
-        }   
+            res.status(501).send({ status: false, message: "Unable to provide Service" })
+        }
     }
 
 
 
-    static SetCustomerActivities = async (id,url, method, body, params, message) => {
+    static SetCustomerActivities = async (id, url, method, body, params, message) => {
         try {
             const result = new CustomerActivityModel({
-                customer_id:id,
+                customer_id: id,
                 api_name: url,
                 api_method: method,
                 body: body,

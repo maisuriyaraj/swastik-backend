@@ -3,7 +3,7 @@ import AdminControler from "../controllers/adminController.js";
 import verifyAdminToken from "../Middlewares/adminMiddlewares.js";
 import EmployeesControl from "../controllers/employeesController.js";
 import {CustomerControll} from "../controllers/customerController.js";
-import { handleUploadsFile, updateCustomerDocuments, uploadCUstomersDocument, verifyCustomerToken } from "../Middlewares/customersMiddlewares.js";
+import { handleUploadsFile, updateCustomerDocuments, uploadCUstomersDocument, uploadProfilePicture, verifyCustomerToken } from "../Middlewares/customersMiddlewares.js";
 import { getAccountList, getBankDepartments } from "../controllers/otherAPis.js";
 import multer from "multer";
 import verifyStaffToken from "../Middlewares/employeesMiddlewares.js";
@@ -21,7 +21,8 @@ router.post('/admin-activities',verifyAdminToken,AdminControler.getAdminActiviti
 
 // Employees Routes
 router.post("/staff-login", EmployeesControl.LoginStaff);
-router.post("/getEmpList",verifyStaffToken,EmployeesControl.getEmployeesList);
+router.post("/staffloginbyadmin",verifyAdminToken, EmployeesControl.LoginStaffByAdmin);
+router.post("/getEmpList",verifyAdminToken,EmployeesControl.getEmployeesList);
 router.put("/deposit-cash",verifyStaffToken,CustomerControll.DepositCashAmount);
 router.put("/withdraw-cash",verifyStaffToken,CustomerControll.WithdrawCashAmount);
 router.post("/getEmployee",verifyStaffToken,EmployeesControl.getmployee);
@@ -29,6 +30,7 @@ router.post("/getTransectionsEmployee",verifyStaffToken,CustomerControll.getTras
 
 // Customer Routes 
 const uploads = handleUploadsFile();
+const uploadProfile = uploadProfilePicture();
 router.post("/registration", CustomerControll.CustomerRegistration);
 router.post("/upload/:customer_id",verifyCustomerToken,uploadCUstomersDocument,uploads,CustomerControll.UploadBankingDocuments);
 router.put("/update-docs/:customer_id/:document_type",verifyCustomerToken,updateCustomerDocuments,uploads,CustomerControll.UpdateDocuments);
@@ -43,6 +45,8 @@ router.post('/add-wallet',verifyCustomerToken,CustomerControll.AddWallet);
 router.post('/getWalletDetails',verifyCustomerToken,CustomerControll.getWalletDetails);
 router.post("/resetpassword",verifyCustomerToken,CustomerControll.ResetUserPassword);
 router.post("/getTransectionsCustomer",verifyCustomerToken,CustomerControll.getTrasectionsDetails);
+router.post("/onlineTransfer",verifyCustomerToken,CustomerControll.OnlineTransections);
+router.post("/profile/:customer_id",verifyCustomerToken,uploadProfile,CustomerControll.uploadProfile);
 
 
 

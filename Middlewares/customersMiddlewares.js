@@ -56,6 +56,21 @@ export const handleUploadsFile  = (req) =>{
     return uploadDocs;
 }
 
+export const uploadProfilePicture  = (req) =>{
+    const storage = multer.diskStorage({
+        destination: (req, file, cb) => {
+            return cb(null, "./customers/profile_images");
+        },
+        filename: (req, file, cb) => {
+            const  customer_id = req.params.customer_id;
+            const filename =customer_id + `-swastik`+".jpg"
+            return cb(null, filename);
+        }
+    })
+    const uploadAvatar = multer({storage}).single('customer_profile');
+    return uploadAvatar;
+}
+
 
 export const verifyCustomerToken = (req,res,next) =>{
     let token;

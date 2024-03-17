@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 const CustomerSchema = new mongoose.Schema({
+    customer_profile:{type:String,default:''},
     first_name:{type:String,require:true},
     last_name:{type:String,require:true},
     email:{type:String,require:true},

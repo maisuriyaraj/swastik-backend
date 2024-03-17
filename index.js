@@ -17,6 +17,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 // Serve static files from the 'customers' directory
 app.use('/customers/documents', express.static('customers/documents'));
+app.use('/customers/profile_images', express.static('customers/profile_images'));
+
 
 //Load Routes
 app.use("/api",router);

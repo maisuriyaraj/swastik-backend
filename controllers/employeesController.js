@@ -12,7 +12,31 @@ class EmployeesControl{
                 const employee = await staffModal.findOne({email:email});
                 if(employee){
                     let passMatch = await bcrypt.compare(password,employee.password);
+                    console.log(passMatch)
                     if(employee.email == email && passMatch){
+                        let token = jwt.sign({empID:employee._id},secreateKey,{expiresIn:"1d"});
+                        res.status(201).send({status:true,message:"Employee logged in successfully.",token:token,emp:employee._id,code:201});
+                    }else{
+                        res.status(200).send({status:false,message:"Email or password is not Correcct",code:501});
+                    }
+                }else{
+                    res.status(200).send({status:false,message:"You're Unauthorized Person",code : 501});
+                }
+            }else{
+                res.status(200).send({status:false,message:"email and Staff Password is required",code : 501})
+            }      
+        } catch (error) {
+            res.status(404).send({status:false,message:"Unable to provide service"})
+        }
+    }
+
+    static  LoginStaffByAdmin = async(req,res) => {
+        const {email} = req.body;
+        try {
+            if(email){
+                const employee = await staffModal.findOne({email:email});
+                if(employee){
+                    if(employee.email == email){
                         let token = jwt.sign({empID:employee._id},secreateKey,{expiresIn:"1d"});
                         res.status(201).send({status:true,message:"Employee logged in successfully.",token:token,emp:employee._id,code:201});
                     }else{
