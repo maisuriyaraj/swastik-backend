@@ -11,6 +11,7 @@ import WalletModel from "../models/customerWallet.js";
 import CustomerActivityModel from "../models/customerActivities.js";
 import TransectionModel from "../models/customerTransectionHistory.js";
 import mongoose from "mongoose";
+import LoanApplication from "../models/loanApplicationModel.js";
 
 
 
@@ -152,14 +153,14 @@ export class CustomerControll {
         }
     }
 
-    static uploadProfile = async (req,res) =>{
+    static uploadProfile = async (req, res) => {
         try {
             const { customer_id } = req.params;
             console.log(req.file)
-            const collection = await customerModel.updateOne({_id:customer_id},{$set:{customer_profile:req.file.path}});
+            const collection = await customerModel.updateOne({ _id: customer_id }, { $set: { customer_profile: req.file.path } });
             res.status(201).send({ status: true, message: "Your Profile Picture Updated successfully !" });
         } catch (error) {
-            res.status(501).send({status:false,message:"Unable To Provide Service !!"});
+            res.status(501).send({ status: false, message: "Unable To Provide Service !!" });
             console.log(error)
         }
     }
@@ -487,17 +488,17 @@ export class CustomerControll {
             if (payer_id && payer_mpin && payee_id && message && amount) {
                 if (amount < 10000) {
                     const payer = await customerModel.findOne({ _id: payer_id });
-                    const payment_receiver = await customerModel.findOne({_id:payee_id});
+                    const payment_receiver = await customerModel.findOne({ _id: payee_id });
                     const isAuthenticated = await comparePasswords(payer_mpin, payer.pin)
                     if (isAuthenticated) {
                         if (amount < payer.current_balance) {
                             const payerUpdated = await customerModel.updateOne({ _id: payer_id }, { $inc: { current_balance: -amount } });
-                            this.StoreWithdrawTransectionHistory({ customer_id : payer_id, withdraw_amount : amount, current_balance: payer.current_balance - amount, message: message });
+                            this.StoreWithdrawTransectionHistory({ customer_id: payer_id, withdraw_amount: amount, current_balance: payer.current_balance - amount, message: message });
                             const payee = await customerModel.updateOne({ _id: payee_id }, { $inc: { current_balance: amount } })
-                            this.StoreDepositTransectionHistory({ customer_id:payee_id, deposit_amount : amount, current_balance: payment_receiver.current_balance + amount });
+                            this.StoreDepositTransectionHistory({ customer_id: payee_id, deposit_amount: amount, current_balance: payment_receiver.current_balance + amount });
                             res.status(201).send({ status: true, message: "Your Transection is Successfull !", code: 201 });
                         } else {
-                            res.send({status:false,message:"Your Bank Balance is not Sufficient !"})
+                            res.send({ status: false, message: "Your Bank Balance is not Sufficient !" })
                         }
                     } else {
                         res.status(200).send({ status: false, message: "Mpin is Not Correct", code: 501 });
@@ -668,6 +669,124 @@ export class CustomerControll {
                 startTime: moment().format("hh:mm")
             });
             const collection = await result.save();
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    static ApplyForLoan = async (req, res) => {
+        try {
+            const { customer_id, pan_number, account_number } = req.body;
+            if (req.body) {
+                const collection = new LoanApplication(req.body);
+                const result = await collection.save();
+                nodemailer.createTestAccount((err, account) => {
+                    if (err) {
+                        console.error('Failed to create a testing account. ' + err.message);
+                        return process.exit(1);
+                    }
+
+                    // Create a SMTP transporter object
+                    const transporter = nodemailer.createTransport({
+                        host: 'smtp.gmail.com',
+                        port: 587,
+                        secure: false,
+                        auth: {
+                            user: 'rajmaisuria111@gmail.com',
+                            pass: 'pmks qvya coug ekih'
+                        }
+                    });
+
+                    // Message object
+                    let message = {
+                        from: `Swastik Finance <swastikfinance@gmail.com>`,
+                        to: `Recipient <${req.body.personalInformation.email}>`,
+                        subject: 'Loan Application has Submitted !!',
+                        // text: 'HELLO I AM RAJ MAISURIYA!',
+                        html: `
+                            Mr.${req.body.personalInformation.fullName} , Your Loan Application Has Submitted Succcessfully !!..
+                            We Will Inform You to What is Next Step After Your Loan Application Approve by Our Branch Manager !..
+
+                            Thank you for Choosing Our Swastik Finance Bank !!
+                        
+                        `
+                    };
+                    transporter.sendMail(message, (err, info) => {
+                        if (err) {
+                            console.log('Error occurred. ' + err.message);
+                            return process.exit(1);
+                        }
+                        emailURL = nodemailer.getTestMessageUrl(info);
+                        // linkUrl = nodemailer.getTestMessageUrl(info);
+                        res.send({ status: true, message: "Email sent Successfully", url: nodemailer.getTestMessageUrl(info) });
+                    });
+                });
+                res.send({ status: true, message: "Your Loan Application has Submitted !!" })
+            } else {
+                res.status(501).send({ status: false, message: "Please Provide All the Details !!" })
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    static ApproveOrRejectApplication = async (req, res) => {
+        try {
+            const { loan_id, account_number, email, status } = req.body;
+            if (loan_id, account_number) {
+                const application = await LoanApplication.findOne({ _id: loan_id, Account_no: account_number });
+                if (application) {
+                    const result = await LoanApplication.updateOne({ _id: loan_id, Account_no: account_number }, { $set: { loan_status: status } });
+                    if (result) {
+                        nodemailer.createTestAccount((err, account) => {
+                            if (err) {
+                                console.error('Failed to create a testing account. ' + err.message);
+                                return process.exit(1);
+                            }
+
+                            // Create a SMTP transporter object
+                            const transporter = nodemailer.createTransport({
+                                host: 'smtp.gmail.com',
+                                port: 587,
+                                secure: false,
+                                auth: {
+                                    user: 'rajmaisuria111@gmail.com',
+                                    pass: 'pmks qvya coug ekih'
+                                }
+                            });
+
+                            // Message object
+                            let message = {
+                                from: `Swastik Finance <swastikfinance@gmail.com>`,
+                                to: `Recipient <${email}>`,
+                                subject: 'Your Application Information',
+                                html: `
+                                Mr.${application.personalInformation.fullName} , Your Loan Application Has Submitted Succcessfully !!..
+                                Your Loan Application had ${status}.
+                                Please Kindly Note That !!
+    
+                                Thank you for Choosing Our Swastik Finance Bank !!
+                            
+                            `
+                            };
+                            transporter.sendMail(message, (err, info) => {
+                                if (err) {
+                                    console.log('Error occurred. ' + err.message);
+                                    return process.exit(1);
+                                }
+                                emailURL = nodemailer.getTestMessageUrl(info);
+                                // linkUrl = nodemailer.getTestMessageUrl(info);
+                                res.send({ status: true, message: "Email sent Successfully", url: nodemailer.getTestMessageUrl(info) });
+                            });
+                        });
+                        res.send({ status: true, message: "Loan Status Updated Successfully !!" });
+                    }
+                }else{
+                    res.send({status:false,message:"Loan Application not Found !!"})
+                }
+            } else {
+                res.send({ status: false, message: "Please Provide Loan id" });
+            }
         } catch (error) {
             console.log(error)
         }
