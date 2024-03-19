@@ -45,7 +45,7 @@ const loanApplicationSchema = new mongoose.Schema({
         }
     },
     financialInformation: {
-        totalMonthlyIncome: {
+        TotalAnnuaIncome: {
             type: Number,
             required: true
         },

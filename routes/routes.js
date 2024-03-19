@@ -47,6 +47,7 @@ router.post("/resetpassword",verifyCustomerToken,CustomerControll.ResetUserPassw
 router.post("/getTransectionsCustomer",verifyCustomerToken,CustomerControll.getTrasectionsDetails);
 router.post("/onlineTransfer",verifyCustomerToken,CustomerControll.OnlineTransections);
 router.post("/profile/:customer_id",verifyCustomerToken,uploadProfile,CustomerControll.uploadProfile);
+router.post("/loanApplication",verifyCustomerToken,CustomerControll.ApplyForLoan);
 
 
 

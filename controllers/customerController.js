@@ -3,7 +3,7 @@ import "dotenv/config";
 import customerModel from "../models/customersModel.js";
 import DocumentModel from "../models/customer_documents.js";
 import moment from "moment";
-import bcrypt, { compare } from "bcrypt"
+import bcrypt, { compare } from "bcrypt";
 import multer from "multer";
 import { getEmailBody, getHashPassword, generateOtp, comparePasswords, getEmailBodyForUploadDocs, WalletEmailBody, getDepositEmailBody, getWithdrawEmailBody } from "../utils/helperFunctions.js";
 import nodemailer from "nodemailer";
