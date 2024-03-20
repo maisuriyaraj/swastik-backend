@@ -6,10 +6,6 @@ const loanApplicationSchema = new mongoose.Schema({
             type: String,
             required: true
         },
-        dateOfBirth: {
-            type: Date,
-            required: true
-        },
         panCardNumber: {
             type: String,
             required: true
@@ -70,9 +66,7 @@ const loanApplicationSchema = new mongoose.Schema({
     },
     coApplicantInformation: {
         fullName: String,
-        dateOfBirth: Date,
         relationshipToPrimaryApplicant: String,
-        // Other fields similar to personalInformation and employmentInformation can be added here
     },
     consentAndAuthorization: {
         creditReportAuthorization: {
@@ -91,11 +85,9 @@ const loanApplicationSchema = new mongoose.Schema({
     declarationAndSignatures: {
         certification: {
             type: Boolean,
-            required: true
         },
         applicantSignature: {
             type: String,
-            required: true
         },
         coApplicantSignature: String,
         date: {

@@ -27,6 +27,10 @@ router.put("/deposit-cash",verifyStaffToken,CustomerControll.DepositCashAmount);
 router.put("/withdraw-cash",verifyStaffToken,CustomerControll.WithdrawCashAmount);
 router.post("/getEmployee",verifyStaffToken,EmployeesControl.getmployee);
 router.post("/getTransectionsEmployee",verifyStaffToken,CustomerControll.getTrasectionsDetails);
+router.post("/getLoanDetailsStaff",verifyStaffToken,CustomerControll.getLoanDetails);
+router.post("/getLoanDetails",verifyCustomerToken,CustomerControll.getLoanDetails);
+
+router.post("/getAllLoanDetailsStaff",verifyStaffToken,CustomerControll.getALlLOanDetails);
 
 // Customer Routes 
 const uploads = handleUploadsFile();
@@ -48,6 +52,9 @@ router.post("/getTransectionsCustomer",verifyCustomerToken,CustomerControll.getT
 router.post("/onlineTransfer",verifyCustomerToken,CustomerControll.OnlineTransections);
 router.post("/profile/:customer_id",verifyCustomerToken,uploadProfile,CustomerControll.uploadProfile);
 router.post("/loanApplication",verifyCustomerToken,CustomerControll.ApplyForLoan);
+router.post("/getLoanDetailsAdmin",verifyAdminToken,CustomerControll.getLoanDetails);
+router.post("/getAllLoansAdmin",verifyAdminToken,CustomerControll.getALlLOanDetails);
+router.post("/changeLoanStatus",verifyAdminToken,CustomerControll.ApproveOrRejectApplication);
 
 
 

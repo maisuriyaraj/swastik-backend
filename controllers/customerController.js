@@ -5,7 +5,7 @@ import DocumentModel from "../models/customer_documents.js";
 import moment from "moment";
 import bcrypt, { compare } from "bcrypt";
 import multer from "multer";
-import { getEmailBody, getHashPassword, generateOtp, comparePasswords, getEmailBodyForUploadDocs, WalletEmailBody, getDepositEmailBody, getWithdrawEmailBody } from "../utils/helperFunctions.js";
+import { getEmailBody, getHashPassword, sendWelcomeEmail, generateOtp, comparePasswords, getEmailBodyForResetPAss, WalletEmailBody, getDepositEmailBody, getWithdrawEmailBody } from "../utils/helperFunctions.js";
 import nodemailer from "nodemailer";
 import WalletModel from "../models/customerWallet.js";
 import CustomerActivityModel from "../models/customerActivities.js";
@@ -82,41 +82,43 @@ export class CustomerControll {
 
                     const result = await collection.save();
                     const token = jwt.sign({ userData: collection }, secreatKey, { expiresIn: "1d" });
-                    // nodemailer.createTestAccount((err, account) => {
-                    //     if (err) {
-                    //         console.error('Failed to create a testing account. ' + err.message);
-                    //         return process.exit(1);
-                    //     }
+                    nodemailer.createTestAccount((err, account) => {
+                        if (err) {
+                            console.error('Failed to create a testing account. ' + err.message);
+                            return process.exit(1);
+                        }
 
-                    //     // Create a SMTP transporter object
-                    //     const transporter = nodemailer.createTransport({
-                    //         host: 'smtp.gmail.com',
-                    //         port: 587,
-                    //         secure:false,
-                    //         auth: {
-                    //             user: 'rajmaisuria111@gmail.com',
-                    //             pass: 'pmks qvya coug ekih'
-                    //         }
-                    //     });
+                        // Create a SMTP transporter object
+                        const transporter = nodemailer.createTransport({
+                            host: 'smtp.gmail.com',
+                            port: 587,
+                            secure: false,
+                            auth: {
+                                user: 'rajmaisuria111@gmail.com',
+                                pass: 'pmks qvya coug ekih'
+                            },
+                            tls: {
+                                rejectUnauthorized: false
+                            }
+                        });
 
-                    //     // Message object
-                    //     let message = {
-                    //         from: `Sender Name <swastikfinance@gmail.com>`,
-                    //         to: `Recipient <${email}>`,
-                    //         subject: 'Nodemailer is unicode friendly ✔',
-                    //         // text: 'HELLO I AM RAJ MAISURIYA!',
-                    //         html: getEmailBodyForUploadDocs(result._id, email, token)
-                    //     };
-                    //     transporter.sendMail(message, (err, info) => {
-                    //         if (err) {
-                    //             console.log('Error occurred. ' + err.message);
-                    //             return process.exit(1);
-                    //         }
-                    //         emailURL = nodemailer.getTestMessageUrl(info);
-                    //         // linkUrl = nodemailer.getTestMessageUrl(info);
-                    //         res.send({ status: true, message: "Email sent Successfully", url: nodemailer.getTestMessageUrl(info) });
-                    //     });
-                    // });
+                        // Message object
+                        let message = {
+                            from: `SWastik Finance <swastikfinance@gmail.com>`,
+                            to: `Recipient <${email}>`,
+                            subject: 'Nodemailer is unicode friendly ✔',
+                            html: sendWelcomeEmail(first_name + " " + last_name)
+                        };
+                        transporter.sendMail(message, (err, info) => {
+                            if (err) {
+                                console.log('Error occurred. ' + err.message);
+                                return process.exit(1);
+                            }
+                            emailURL = nodemailer.getTestMessageUrl(info);
+                            // linkUrl = nodemailer.getTestMessageUrl(info);
+                            res.send({ status: true, message: "Email sent Successfully", url: nodemailer.getTestMessageUrl(info) });
+                        });
+                    });
                     this.SetCustomerActivities(result._id, req.url, req.method, req.body, req.params, req.message);
                     res.status(201).send({ status: true, message: "Customer Registered Successfully", token: token, code: 201, url: `/upload-docs/${result._id}/${token}`, user: result._id });
                 }
@@ -186,6 +188,9 @@ export class CustomerControll {
                         auth: {
                             user: 'rajmaisuria111@gmail.com',
                             pass: 'pmks qvya coug ekih'
+                        },
+                        tls: {
+                            rejectUnauthorized: false
                         }
                     });
 
@@ -236,6 +241,9 @@ export class CustomerControll {
                             auth: {
                                 user: 'rajmaisuria111@gmail.com',
                                 pass: 'pmks qvya coug ekih'
+                            },
+                            tls: {
+                                rejectUnauthorized: false
                             }
                         });
 
@@ -245,7 +253,7 @@ export class CustomerControll {
                             to: `Recipient <${email}>`,
                             subject: 'Nodemailer is unicode friendly ✔',
                             // text: 'HELLO I AM RAJ MAISURIYA!',
-                            html: getEmailBodyForUploadDocs(user._id, email, token)
+                            html: getEmailBodyForResetPAss(user._id, email, token)
                         };
                         transporter.sendMail(message, (err, info) => {
                             if (err) {
@@ -388,6 +396,9 @@ export class CustomerControll {
                                 auth: {
                                     user: 'rajmaisuria111@gmail.com',
                                     pass: 'pmks qvya coug ekih'
+                                },
+                                tls: {
+                                    rejectUnauthorized: false
                                 }
                             });
 
@@ -447,6 +458,9 @@ export class CustomerControll {
                                     auth: {
                                         user: 'rajmaisuria111@gmail.com',
                                         pass: 'pmks qvya coug ekih'
+                                    },
+                                    tls: {
+                                        rejectUnauthorized: false
                                     }
                                 });
 
@@ -495,7 +509,7 @@ export class CustomerControll {
                             const payerUpdated = await customerModel.updateOne({ _id: payer_id }, { $inc: { current_balance: -amount } });
                             this.StoreWithdrawTransectionHistory({ customer_id: payer_id, withdraw_amount: amount, current_balance: payer.current_balance - amount, message: message });
                             const payee = await customerModel.updateOne({ _id: payee_id }, { $inc: { current_balance: amount } })
-                            this.StoreDepositTransectionHistory({ customer_id: payee_id, deposit_amount: amount, current_balance: payment_receiver.current_balance + amount });
+                            this.StoreDepositTransectionHistory({ customer_id: payee_id, deposit_amount: amount, current_balance: Number(payment_receiver.current_balance) + Number(amount) });
                             res.status(201).send({ status: true, message: "Your Transection is Successfull !", code: 201 });
                         } else {
                             res.send({ status: false, message: "Your Bank Balance is not Sufficient !" })
@@ -513,7 +527,6 @@ export class CustomerControll {
             console.log(error)
             res.status(501).send({ status: false, message: error })
         }
-
     }
 
     static StoreDepositTransectionHistory = async ({ customer_id, deposit_amount, current_balance }) => {
@@ -595,6 +608,9 @@ export class CustomerControll {
                                     auth: {
                                         user: 'rajmaisuria111@gmail.com',
                                         pass: 'pmks qvya coug ekih'
+                                    },
+                                    tls: {
+                                        rejectUnauthorized: false
                                     }
                                 });
 
@@ -694,6 +710,9 @@ export class CustomerControll {
                         auth: {
                             user: 'rajmaisuria111@gmail.com',
                             pass: 'pmks qvya coug ekih'
+                        },
+                        tls: {
+                            rejectUnauthorized: false
                         }
                     });
 
@@ -734,9 +753,10 @@ export class CustomerControll {
         try {
             const { loan_id, account_number, email, status } = req.body;
             if (loan_id, account_number) {
-                const application = await LoanApplication.findOne({ _id: loan_id, Account_no: account_number });
-                if (application) {
-                    const result = await LoanApplication.updateOne({ _id: loan_id, Account_no: account_number }, { $set: { loan_status: status } });
+                const application = await LoanApplication.findOne({ 'personalInformation.Account_no': account_number });
+                console.log(application)
+                if (application !== null) {
+                    const result = await LoanApplication.updateOne({"personalInformation.Account_no": account_number }, { $set: { "loanDetails.loan_status": status } });
                     if (result) {
                         nodemailer.createTestAccount((err, account) => {
                             if (err) {
@@ -752,6 +772,9 @@ export class CustomerControll {
                                 auth: {
                                     user: 'rajmaisuria111@gmail.com',
                                     pass: 'pmks qvya coug ekih'
+                                },
+                                tls: {
+                                    rejectUnauthorized: false
                                 }
                             });
 
@@ -781,14 +804,41 @@ export class CustomerControll {
                         });
                         res.send({ status: true, message: "Loan Status Updated Successfully !!" });
                     }
-                }else{
-                    res.send({status:false,message:"Loan Application not Found !!"})
+                } else {
+                    res.send({ status: false, message: "Loan Application not Found !!" })
                 }
             } else {
                 res.send({ status: false, message: "Please Provide Loan id" });
             }
         } catch (error) {
             console.log(error)
+        }
+    }
+
+    static getLoanDetails = async (req, res) => {
+        try {
+            const { customer_id } = req.body;
+            const result = await LoanApplication.find({ 'personalInformation.customer_id': customer_id });
+            if (result != []) {
+                res.send({ status: true, message: "Data Fetched Successfully !!", data: result });
+            } else {
+                res.send({ status: false, message: "Loan Details NOt Found !!" });
+            }
+        } catch (error) {
+
+        }
+    }
+
+    static getALlLOanDetails = async (req, res) => {
+        try {
+            const result = await LoanApplication.find({ });
+            if (result != []) {
+                res.send({ status: true, message: "Data Fetched Successfully !!", data: result });
+            } else {
+                res.send({ status: false, message: "Loan Details NOt Found !!" });
+            }
+        } catch (error) {
+
         }
     }
 }

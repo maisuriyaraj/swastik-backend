@@ -23,15 +23,15 @@ export const getEmailBody = (otp) => {
     <div style="font-family: Helvetica,Arial,sans-serif;min-width:1000px;overflow:auto;line-height:2">
   <div style="margin:50px auto;width:70%;padding:20px 0">
     <div style="border-bottom:1px solid #eee">
-      <a href="" style="font-size:1.4em;color: #00466a;text-decoration:none;font-weight:600">Your Brand</a>
+      <a href="" style="font-size:1.4em;color: #00466a;text-decoration:none;font-weight:600">Swastik Finance</a>
     </div>
     <p style="font-size:1.1em">Hi,</p>
-    <p>Thank you for choosing Your Brand. Use the following OTP to complete your Sign Up procedures. OTP is valid for 5 minutes</p>
+    <p>Thank you for choosing Swastik Finance. Use the following OTP to complete your Sign Up procedures. OTP is valid for 5 minutes</p>
     <h2 style="background: #00466a;margin: 0 auto;width: max-content;padding: 0 10px;color: #fff;border-radius: 4px;">${otp}</h2>
     <p style="font-size:0.9em;">Regards,<br />Your Brand</p>
     <hr style="border:none;border-top:1px solid #eee" />
     <div style="float:right;padding:8px 0;color:#aaa;font-size:0.8em;line-height:1;font-weight:300">
-      <p>Your Brand Inc</p>
+      <p>RJIndustries.Inc</p>
       <p>1600 Amphitheatre Parkway</p>
       <p>California</p>
     </div>
@@ -45,7 +45,7 @@ export const getEmailBody = (otp) => {
   }
 }
 
-export const getEmailBodyForUploadDocs = (id, email, token) => {
+export const getEmailBodyForResetPAss = (id, email, token) => {
   if (id && email) {
     const emailBody = `
     <!DOCTYPE html>
@@ -87,11 +87,11 @@ export const getEmailBodyForUploadDocs = (id, email, token) => {
 <body>
   <div class="container">
     <h1>Reset Your Password for Swastik Finance</h1>
-    <p>Dear [User],</p>
+    <p>Dear ${email},</p>
     <p>We hope this email finds you well.</p>
     <p>Your Reset Password Link..</p>
     <p><a href="http://localhost:3000/resetPass/${id}/${token}">Reset Password</a></p>
-    <p>If you encounter any issues or have any questions, please don't hesitate to contact our support team at <a href="mailto:[Support Email]">[Support Email]</a> or call us at [Support Phone Number].</p>
+    <p>If you encounter any issues or have any questions, please don't hesitate to contact our support team at <a href="mailto:[Support Email]">swastikfinance.com</a> or call us at 97971857455.</p>
     <p>Thank you for your prompt attention to this matter.</p>
     <p>Best regards,<br> Swastik Finance Team</p>
   </div>
@@ -209,7 +209,7 @@ export const WalletEmailBody = (customer, balance) => {
   </html>`
 }
 
-export const getDepositEmailBody = (name,deposit_amt,current_balance) => {
+export const getDepositEmailBody = (name, deposit_amt, current_balance) => {
   return `
 
   <!DOCTYPE html>
@@ -242,7 +242,7 @@ export const getDepositEmailBody = (name,deposit_amt,current_balance) => {
   `
 }
 
-export const getWithdrawEmailBody = (name,withdraw_amt,current_balance) => {
+export const getWithdrawEmailBody = (name, withdraw_amt, current_balance) => {
   return `
 
   <!DOCTYPE html>
@@ -273,4 +273,64 @@ export const getWithdrawEmailBody = (name,withdraw_amt,current_balance) => {
 </html>
 
   `
+}
+
+
+export const sendWelcomeEmail = (customerName) => {
+  return `
+    
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>New Account Created</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #f4f4f4;
+            }
+            .container {
+                max-width: 600px;
+                margin: 20px auto;
+                padding: 20px;
+                background-color: #fff;
+                border-radius: 8px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            }
+            h1 {
+                color: #333;
+            }
+            p {
+                color: #666;
+            }
+            .button {
+                display: inline-block;
+                background-color: #007bff;
+                color: #fff;
+                text-decoration: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+            }
+            .button:hover {
+                background-color: #0056b3;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Welcome to Our Website! ${customerName}</h1>
+            <p>Your account has been successfully created.</p>
+            <p>You can now start using our services.</p>
+            <p>If you have any questions or need assistance, feel free to contact us.</p>
+            <p>Thank you!</p>
+            <a href="https://yourwebsite.com" class="button">Visit Our Website</a>
+        </div>
+    </body>
+    </html>
+    
+    `
 }
