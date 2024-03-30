@@ -1,5 +1,13 @@
 import moment from 'moment';
 import mongoose from 'mongoose';
+
+const docs = new mongoose.Schema({
+    doc_path:{type:String},
+    doc_type:{type:String},
+    uploadedDate:{type:String},
+    uploadStatus:{type:Boolean,default:false},
+    verified:{type:Boolean,default:false}
+})
 const loanApplicationSchema = new mongoose.Schema({
     personalInformation: {
         fullName: {
@@ -94,7 +102,8 @@ const loanApplicationSchema = new mongoose.Schema({
             type: Date,
             default: Date.now
         }
-    }
+    },
+    documents:{type:[docs],default:[]}
 });
 
 const LoanApplication = mongoose.model('LoanApplication', loanApplicationSchema);

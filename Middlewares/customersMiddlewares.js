@@ -71,6 +71,27 @@ export const uploadProfilePicture  = (req) =>{
     return uploadAvatar;
 }
 
+export const uploadLoanDocuments  = (req) =>{
+    const storage = multer.diskStorage({
+        destination: (req, file, cb) => {
+            return cb(null, "./customers/loan_documents");
+        },
+        filename: (req, file, cb) => {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+            const  loan_id = req.params.loan_id;
+            const filename =loan_id + uniqueSuffix +`-swastik`+".pdf"
+            return cb(null, filename);
+        }
+    })
+    const uploadDocs = multer({ storage }).fields([
+        { name: 'file1', maxCount: 1 },
+        { name: 'file2', maxCount: 1 },
+        { name: 'file3', maxCount: 1 },
+        { name: 'file4', maxCount: 1 },
+        { name: 'file5', maxCount: 1 }
+    ]);
+    return uploadDocs;
+}
 
 export const verifyCustomerToken = (req,res,next) =>{
     let token;

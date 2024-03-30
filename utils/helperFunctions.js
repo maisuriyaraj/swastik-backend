@@ -325,6 +325,7 @@ export const sendWelcomeEmail = (customerName) => {
             <h1>Welcome to Our Website! ${customerName}</h1>
             <p>Your account has been successfully created.</p>
             <p>You can now start using our services.</p>
+            <p>Your Account will be Activate in 24 hours.</p>
             <p>If you have any questions or need assistance, feel free to contact us.</p>
             <p>Thank you!</p>
             <a href="https://yourwebsite.com" class="button">Visit Our Website</a>
@@ -333,4 +334,145 @@ export const sendWelcomeEmail = (customerName) => {
     </html>
     
     `
+}
+
+
+export const sendDocumentManagemantEmailTemplate = () => {
+    return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Loan Application Review</title>
+      <style>
+        /* CSS styles for email */
+        body {
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+          background-color: #f7f7f7;
+          margin: 0;
+          padding: 0;
+        }
+        .container {
+          max-width: 600px;
+          margin: 20px auto;
+          background-color: #fff;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+          color: #333;
+        }
+        p {
+          color: #555;
+        }
+        .cta-button {
+          display: inline-block;
+          background-color: #007bff;
+          color: #fff;
+          padding: 10px 20px;
+          text-decoration: none;
+          border-radius: 4px;
+        }
+        .cta-button:hover {
+          background-color: #0056b3;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>Loan Application Review</h1>
+        <p>Your loan application has been reviewed by our admin. You are required to upload the necessary documents through our portal to proceed with your application.</p>
+        <p>Please ensure you provide all required documents for a speedy process.</p>
+        <p><strong>Note:</strong> Failure to upload the required documents may result in delays in processing your loan application.</p>
+        <a href="https://yourportal.com/upload-documents" class="cta-button">Upload Documents</a>
+        <p>If you have any questions or concerns, feel free to contact us at support@yourcompany.com.</p>
+      </div>
+    </body>
+    </html>
+    
+    
+    `
+}
+
+export const sendApprovalEmail = (fullname) => {
+  return `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loan Approval Notification</title>
+  <style>
+      /* Reset styles */
+      body, h1, p {
+          margin: 0;
+          padding: 0;
+      }
+  
+      body {
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+          background-color: #f5f5f5;
+      }
+  
+      .container {
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+          background-color: #ffffff;
+          border-radius: 10px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+  
+      h1 {
+          font-size: 24px;
+          color: #333333;
+          margin-bottom: 20px;
+      }
+  
+      p {
+          font-size: 16px;
+          color: #666666;
+          margin-bottom: 20px;
+      }
+  
+      .button {
+          display: inline-block;
+          background-color: #007bff;
+          color: #ffffff;
+          text-decoration: none;
+          padding: 10px 20px;
+          border-radius: 5px;
+          font-size: 16px;
+      }
+  
+      .button:hover {
+          background-color: #0056b3;
+      }
+  
+      @media screen and (max-width: 600px) {
+          .container {
+              width: 100%;
+              border-radius: 0;
+          }
+      }
+  </style>
+  </head>
+  <body>
+      <div class="container">
+          <h1>${fullname} ,Your has Loan Approved</h1>
+          <p>Congratulations! Your loan application has been approved.</p>
+          <p>You can now access the funds you need. Please review the terms and conditions provided with your loan agreement.</p>
+          <p>Your Requested loan Amount will be deposit in 24 hours.</p>
+          <p>If you have any questions or need further assistance, feel free to contact our customer support team.</p>
+          <a href="#" class="button">Visit our Website</a>
+      </div>
+  </body>
+  </html>
+  
+  
+  `
 }

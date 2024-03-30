@@ -5,7 +5,7 @@ import DocumentModel from "../models/customer_documents.js";
 import moment from "moment";
 import bcrypt, { compare } from "bcrypt";
 import multer from "multer";
-import { getEmailBody, getHashPassword, sendWelcomeEmail, generateOtp, comparePasswords, getEmailBodyForResetPAss, WalletEmailBody, getDepositEmailBody, getWithdrawEmailBody } from "../utils/helperFunctions.js";
+import { getEmailBody, getHashPassword, sendWelcomeEmail, generateOtp, comparePasswords, getEmailBodyForResetPAss, WalletEmailBody, getDepositEmailBody, getWithdrawEmailBody, sendDocumentManagemantEmailTemplate, sendApprovalEmail } from "../utils/helperFunctions.js";
 import nodemailer from "nodemailer";
 import WalletModel from "../models/customerWallet.js";
 import CustomerActivityModel from "../models/customerActivities.js";
@@ -753,55 +753,88 @@ export class CustomerControll {
         try {
             const { loan_id, account_number, email, status } = req.body;
             if (loan_id, account_number) {
-                const application = await LoanApplication.findOne({ 'personalInformation.Account_no': account_number });
-                console.log(application)
+                const application = await LoanApplication.findOne({ '_id': loan_id });
                 if (application !== null) {
-                    const result = await LoanApplication.updateOne({"personalInformation.Account_no": account_number }, { $set: { "loanDetails.loan_status": status } });
+                    const result = await LoanApplication.updateOne({ "_id": loan_id }, { $set: { "loanDetails.loan_status": status } });
                     if (result) {
-                        nodemailer.createTestAccount((err, account) => {
-                            if (err) {
-                                console.error('Failed to create a testing account. ' + err.message);
-                                return process.exit(1);
-                            }
-
-                            // Create a SMTP transporter object
-                            const transporter = nodemailer.createTransport({
-                                host: 'smtp.gmail.com',
-                                port: 587,
-                                secure: false,
-                                auth: {
-                                    user: 'rajmaisuria111@gmail.com',
-                                    pass: 'pmks qvya coug ekih'
-                                },
-                                tls: {
-                                    rejectUnauthorized: false
-                                }
-                            });
-
-                            // Message object
-                            let message = {
-                                from: `Swastik Finance <swastikfinance@gmail.com>`,
-                                to: `Recipient <${email}>`,
-                                subject: 'Your Application Information',
-                                html: `
-                                Mr.${application.personalInformation.fullName} , Your Loan Application Has Submitted Succcessfully !!..
-                                Your Loan Application had ${status}.
-                                Please Kindly Note That !!
-    
-                                Thank you for Choosing Our Swastik Finance Bank !!
-                            
-                            `
-                            };
-                            transporter.sendMail(message, (err, info) => {
+                        if (status == "Approved") {
+                            this.DepositRequestLoanAmount({customer_id:application.personalInformation.customer_id, deposit_amount:application.loanDetails.loanAmountRequested, account_number:application.personalInformation.Account_no});
+                            nodemailer.createTestAccount((err, account) => {
                                 if (err) {
-                                    console.log('Error occurred. ' + err.message);
+                                    console.error('Failed to create a testing account. ' + err.message);
                                     return process.exit(1);
                                 }
-                                emailURL = nodemailer.getTestMessageUrl(info);
-                                // linkUrl = nodemailer.getTestMessageUrl(info);
-                                res.send({ status: true, message: "Email sent Successfully", url: nodemailer.getTestMessageUrl(info) });
+
+                                // Create a SMTP transporter object
+                                const transporter = nodemailer.createTransport({
+                                    host: 'smtp.gmail.com',
+                                    port: 587,
+                                    secure: false,
+                                    auth: {
+                                        user: 'rajmaisuria111@gmail.com',
+                                        pass: 'pmks qvya coug ekih'
+                                    },
+                                    tls: {
+                                        rejectUnauthorized: false
+                                    }
+                                });
+
+                                // Message object
+                                let message = {
+                                    from: `Swastik Finance <swastikfinance@gmail.com>`,
+                                    to: `Recipient <${email}>`,
+                                    subject: 'Your Loan is Approved',
+                                    html: sendApprovalEmail(application.personalInformation.fullName)
+                                };
+                                transporter.sendMail(message, (err, info) => {
+                                    if (err) {
+                                        console.log('Error occurred. ' + err.message);
+                                        return process.exit(1);
+                                    }
+                                    emailURL = nodemailer.getTestMessageUrl(info);
+                                    // linkUrl = nodemailer.getTestMessageUrl(info);
+                                    res.send({ status: true, message: "Email sent Successfully", url: nodemailer.getTestMessageUrl(info) });
+                                });
                             });
-                        });
+                        } else {
+                            nodemailer.createTestAccount((err, account) => {
+                                if (err) {
+                                    console.error('Failed to create a testing account. ' + err.message);
+                                    return process.exit(1);
+                                }
+
+                                // Create a SMTP transporter object
+                                const transporter = nodemailer.createTransport({
+                                    host: 'smtp.gmail.com',
+                                    port: 587,
+                                    secure: false,
+                                    auth: {
+                                        user: 'rajmaisuria111@gmail.com',
+                                        pass: 'pmks qvya coug ekih'
+                                    },
+                                    tls: {
+                                        rejectUnauthorized: false
+                                    }
+                                });
+
+                                // Message object
+                                let message = {
+                                    from: `Swastik Finance <swastikfinance@gmail.com>`,
+                                    to: `Recipient <${email}>`,
+                                    subject: 'Your Application Information',
+                                    html: `Your Loan Application has been ${status}. Thank you !`
+                                };
+                                transporter.sendMail(message, (err, info) => {
+                                    if (err) {
+                                        console.log('Error occurred. ' + err.message);
+                                        return process.exit(1);
+                                    }
+                                    emailURL = nodemailer.getTestMessageUrl(info);
+                                    // linkUrl = nodemailer.getTestMessageUrl(info);
+                                    res.send({ status: true, message: "Email sent Successfully", url: nodemailer.getTestMessageUrl(info) });
+                                });
+                            });
+                        }
                         res.send({ status: true, message: "Loan Status Updated Successfully !!" });
                     }
                 } else {
@@ -811,7 +844,7 @@ export class CustomerControll {
                 res.send({ status: false, message: "Please Provide Loan id" });
             }
         } catch (error) {
-            console.log(error)
+            console.log(error);
         }
     }
 
@@ -831,7 +864,7 @@ export class CustomerControll {
 
     static getALlLOanDetails = async (req, res) => {
         try {
-            const result = await LoanApplication.find({ });
+            const result = await LoanApplication.find({});
             if (result != []) {
                 res.send({ status: true, message: "Data Fetched Successfully !!", data: result });
             } else {
@@ -839,6 +872,175 @@ export class CustomerControll {
             }
         } catch (error) {
 
+        }
+    }
+
+    static getLoanDetailsbyLoanID = async (req, res) => {
+        try {
+            const { loan_id } = req.body;
+            const result = await LoanApplication.findOne({ _id: loan_id });
+            if (result != null) {
+                res.send({ status: true, message: "Data Fetched Successfully !!", data: result });
+            } else {
+                res.send({ status: false, message: "Loan Details NOt Found !!" });
+            }
+        } catch (error) {
+
+        }
+    }
+
+    static sendDocumentManagemantEmail = async (req, res) => {
+        try {
+
+            const { email } = req.body;
+            if (email) {
+                nodemailer.createTestAccount((err, account) => {
+                    if (err) {
+                        console.error('Failed to create a testing account. ' + err.message);
+                        return process.exit(1);
+                    }
+
+                    // Create a SMTP transporter object
+                    const transporter = nodemailer.createTransport({
+                        host: 'smtp.gmail.com',
+                        port: 587,
+                        secure: false,
+                        auth: {
+                            user: 'rajmaisuria111@gmail.com',
+                            pass: 'pmks qvya coug ekih'
+                        },
+                        tls: {
+                            rejectUnauthorized: false
+                        }
+                    });
+
+                    // Message object
+                    let message = {
+                        from: `Swastik Finance <swastikfinance@gmail.com>`,
+                        to: `Recipient <${email}>`,
+                        subject: 'Your Application Information',
+                        html: sendDocumentManagemantEmailTemplate()
+                    };
+                    transporter.sendMail(message, (err, info) => {
+                        if (err) {
+                            console.log('Error occurred. ' + err.message);
+                            return process.exit(1);
+                        }
+                        emailURL = nodemailer.getTestMessageUrl(info);
+                        // linkUrl = nodemailer.getTestMessageUrl(info);
+                        res.send({ status: true, message: "Email sent Successfully", url: nodemailer.getTestMessageUrl(info) });
+                    });
+                });
+                res.send({ status: true, message: "Email Sent Successfully !!" });
+            } else {
+                res.send({ status: false, message: "Please Provide recipient Email" });
+            }
+        } catch (error) {
+            res.send({ status: false, message: "Unable to Provide Service" });
+            console.log(error);
+        }
+    }
+
+    static uploadLoanDocuments = async (req, res) => {
+        try {
+            const { loan_id } = req.params;
+            const { customer_id } = req.params;
+            const collection = await LoanApplication.updateOne({ _id: loan_id }, {
+                $set: {
+                    documents: [
+                        { doc_path: req.files.file1[0].path, doc_type: "Adhar Card", uploadedDate: moment().format("DD/MM/YYYY"), uploadStatus: true },
+                        { doc_path: req.files.file2[0].path, doc_type: "Electricity Bill", uploadedDate: moment().format("DD/MM/YYYY"), uploadStatus: true },
+                        { doc_path: req.files.file3[0].path, doc_type: "Bank statements", uploadedDate: moment().format("DD/MM/YYYY"), uploadStatus: true },
+                        { doc_path: req.files.file4[0].path, doc_type: "Property tax receipt", uploadedDate: moment().format("DD/MM/YYYY"), uploadStatus: true },
+                        { doc_path: req.files.file5[0].path, doc_type: "Loan Application Form", uploadedDate: moment().format("DD/MM/YYYY"), uploadStatus: true }
+                    ]
+                }
+            });
+            res.status(201).send({ status: true, message: "Documents Uploaded Sucessfully" })
+        } catch (error) {
+            console.log(error)
+            res.status(501).send({ status: false, message: "Unable to Providde Service" })
+        }
+    }
+
+    static verifyLoanDocuments = async (req, res) => {
+        try {
+            const { doc_id, loan_id, status } = req.body;
+            const loanApplication = await LoanApplication.findOne({ _id: loan_id });
+            if (loanApplication) {
+                const result = await LoanApplication.findByIdAndUpdate(
+                    loan_id,
+                    { $set: { "documents.$[doc].verified": status ? true : false } },
+                    { arrayFilters: [{ "doc._id": doc_id }], new: true }
+                );
+                if (result) {
+                    res.send({ status: true, message: "Document Status Updated Successfully" });
+                } else {
+                    res.send({ status: false, message: "Something went Wrong!!" });
+                }
+            }
+        } catch (error) {
+            console.log(error);
+            res.send({ status: true, message: "Unable to provide service !" });
+        }
+    }
+
+    static DepositRequestLoanAmount = async (data) => {
+        const { customer_id, deposit_amount, account_number } = data;
+        try {
+            if (customer_id && deposit_amount && account_number) {
+                const customer = await customerModel.findOne({ _id: customer_id });
+                if (customer !== null) {
+                    if (customer.account_number === account_number) {
+                        const result = await customerModel.updateOne({ _id: customer_id }, { $set: { current_balance: customer.current_balance + deposit_amount } });
+                        this.StoreDepositTransectionHistory({ customer_id, deposit_amount, current_balance: customer.current_balance + deposit_amount });
+                        nodemailer.createTestAccount((err, account) => {
+                            if (err) {
+                                console.error('Failed to create a testing account. ' + err.message);
+                                return process.exit(1);
+                            }
+                            // Create a SMTP transporter object
+                            const transporter = nodemailer.createTransport({
+                                host: 'smtp.gmail.com',
+                                port: 587,
+                                secure: false,
+                                auth: {
+                                    user: 'rajmaisuria111@gmail.com',
+                                    pass: 'pmks qvya coug ekih'
+                                },
+                                tls: {
+                                    rejectUnauthorized: false
+                                }
+                            });
+
+                            // Message object
+                            let message = {
+                                from: `Sender Name <swastikfinance@gmail.com>`,
+                                to: `Recipient <${customer.email}>`,
+                                subject: 'Your Deposit Amount has been Credited !!',
+                                // text: 'HELLO I AM RAJ MAISURIYA!',
+                                html: getDepositEmailBody(customer.first_name, deposit_amount, customer.current_balance + deposit_amount)
+                            };
+                            transporter.sendMail(message, (err, info) => {
+                                if (err) {
+                                    console.log('Error occurred. ' + err.message);
+                                    return process.exit(1);
+                                }
+                            });
+                        });
+                        // res.send({ status: true, message: `Your Rs.${deposit_amount} has been Credited !! `, code: 201 });
+                    } else {
+                        // res.send({ status: false, message: "Account Number is not correct !!", code: 200 });
+                    }
+                } else {
+                    // res.status(501).send({ status: false, message: "Customer Not Found", code: 200 })
+                }
+            } else {
+                // res.status(501).send({ status: false, message: "All Fields are Required !!", code: 200 });
+            }
+        } catch (error) {
+            console.log(error)
+            // res.status(501).send({ status: false, message: error })
         }
     }
 }
