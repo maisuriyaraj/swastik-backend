@@ -60,7 +60,8 @@ router.post("/customer/loan",verifyAdminToken,CustomerControll.getLoanDetailsbyL
 router.post("/senddocumentmanagementemail",verifyAdminToken,CustomerControll.sendDocumentManagemantEmail);
 router.post("/uploadloanDocs/:loan_id",verifyCustomerToken,uploadLoanDocs,CustomerControll.uploadLoanDocuments);
 router.post("/verifydocuments",verifyAdminToken,uploadLoanDocs,CustomerControll.verifyLoanDocuments);
-
+router.put("/getCustomerProfile",verifyCustomerToken,CustomerControll.getCustomerProfile);
+router.post("/uploadDocsEmailNotify",CustomerControll.UploadIdentityDocsEmail);
 
 
 

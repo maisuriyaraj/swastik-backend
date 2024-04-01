@@ -5,15 +5,14 @@ import DocumentModel from "../models/customer_documents.js";
 import moment from "moment";
 import bcrypt, { compare } from "bcrypt";
 import multer from "multer";
-import { getEmailBody, getHashPassword, sendWelcomeEmail, generateOtp, comparePasswords, getEmailBodyForResetPAss, WalletEmailBody, getDepositEmailBody, getWithdrawEmailBody, sendDocumentManagemantEmailTemplate, sendApprovalEmail } from "../utils/helperFunctions.js";
+import { getEmailBody, getHashPassword, sendWelcomeEmail, generateOtp, comparePasswords, getEmailBodyForResetPAss, WalletEmailBody, getDepositEmailBody, getWithdrawEmailBody, sendDocumentManagemantEmailTemplate, sendApprovalEmail, sendUploadIndentityDocuments } from "../utils/helperFunctions.js";
 import nodemailer from "nodemailer";
 import WalletModel from "../models/customerWallet.js";
 import CustomerActivityModel from "../models/customerActivities.js";
 import TransectionModel from "../models/customerTransectionHistory.js";
 import mongoose from "mongoose";
 import LoanApplication from "../models/loanApplicationModel.js";
-
-
+import cron from "node-cron";
 
 const secreatKey = process.env.SCREATE_KEY;
 let otpEmail = {
@@ -120,7 +119,7 @@ export class CustomerControll {
                         });
                     });
                     this.SetCustomerActivities(result._id, req.url, req.method, req.body, req.params, req.message);
-                    res.status(201).send({ status: true, message: "Customer Registered Successfully", token: token, code: 201, url: `/upload-docs/${result._id}/${token}`, user: result._id });
+                    res.status(201).send({ status: true, message: "Customer Registered Successfully", token: token, code: 201, url: `/upload-docs/${result._id}`, user: result._id });
                 }
             } catch (error) {
                 console.log(error)
@@ -758,7 +757,7 @@ export class CustomerControll {
                     const result = await LoanApplication.updateOne({ "_id": loan_id }, { $set: { "loanDetails.loan_status": status } });
                     if (result) {
                         if (status == "Approved") {
-                            this.DepositRequestLoanAmount({customer_id:application.personalInformation.customer_id, deposit_amount:application.loanDetails.loanAmountRequested, account_number:application.personalInformation.Account_no});
+                            this.DepositRequestLoanAmount({ customer_id: application.personalInformation.customer_id, deposit_amount: application.loanDetails.loanAmountRequested, account_number: application.personalInformation.Account_no });
                             nodemailer.createTestAccount((err, account) => {
                                 if (err) {
                                     console.error('Failed to create a testing account. ' + err.message);
@@ -1041,6 +1040,138 @@ export class CustomerControll {
         } catch (error) {
             console.log(error)
             // res.status(501).send({ status: false, message: error })
+        }
+    }
+
+    static getCustomerProfile = async (req, res) => {
+        try {
+            const { customer_id } = req.body;
+            if (customer_id) {
+                const result = await customerModel.findOne({ _id: customer_id }, { customer_profile: 1 });
+                if (result) {
+                    res.send({ status: true, data: result });
+                } else {
+                    res.send({ status: false, message: "No data Found" });
+                }
+            }
+        } catch (error) {
+
+        }
+    }
+
+    static WithDrawLoanEMI = async (req, res) => {
+        const { customer_id, withdraw_amount, account_number, emp_id } = req.body;
+        try {
+            if (customer_id && withdraw_amount && account_number && emp_id) {
+                const customer = await customerModel.findOne({ _id: customer_id });
+                if (customer !== null) {
+                    if (customer.account_number === account_number) {
+                        if (customer.current_balance <= 500 || customer.current_balance <= withdraw_amount) {
+                            res.send({ status: false, message: "Your Bank Balance is not sufficient !!", code: 200 });
+                        } else {
+                            const result = await customerModel.updateOne({ _id: customer_id }, { $set: { current_balance: customer.current_balance - withdraw_amount } });
+                            this.StoreWithdrawTransectionHistory({ customer_id, withdraw_amount, current_balance: customer.current_balance - withdraw_amount });
+                            nodemailer.createTestAccount((err, account) => {
+                                if (err) {
+                                    console.error('Failed to create a testing account. ' + err.message);
+                                    return process.exit(1);
+                                }
+                                // Create a SMTP transporter object
+                                const transporter = nodemailer.createTransport({
+                                    host: 'smtp.gmail.com',
+                                    port: 587,
+                                    secure: false,
+                                    auth: {
+                                        user: 'rajmaisuria111@gmail.com',
+                                        pass: 'pmks qvya coug ekih'
+                                    },
+                                    tls: {
+                                        rejectUnauthorized: false
+                                    }
+                                });
+
+                                // Message object
+                                let message = {
+                                    from: `Sender Name <swastikfinance@gmail.com>`,
+                                    to: `Recipient <${customer.email}>`,
+                                    subject: `Rs.${withdraw_amount} has been dabited from your account .`,
+                                    // text: 'HELLO I AM RAJ MAISURIYA!',
+                                    html: getWithdrawEmailBody(customer.first_name, withdraw_amount, customer.current_balance - withdraw_amount)
+                                };
+                                transporter.sendMail(message, (err, info) => {
+                                    if (err) {
+                                        console.log('Error occurred. ' + err.message);
+                                        return process.exit(1);
+                                    }
+                                });
+                            });
+                            res.send({ status: true, message: `Your Rs.${withdraw_amount} has been Debited !! `, code: 201 });
+                        }
+                    } else {
+                        res.send({ status: false, message: "Account Number is not correct !!", code: 200 });
+                    }
+                } else {
+                    res.status(501).send({ status: false, message: "Customer Not Found", code: 200 })
+                }
+            } else {
+                res.status(501).send({ status: false, message: "All Fields are Required !!", code: 200 });
+            }
+        } catch (error) {
+            console.log(error)
+            res.status(501).send({ status: false, message: error })
+        }
+    }
+
+    static UploadIdentityDocsEmail = async (req,res) =>{
+        try {
+            const {email} = req.body;
+            if(email)   {
+                const customer_id = await customerModel.findOne({email:email},{_id:1,first_name:1,last_name:1});
+                console.log(customer_id);
+                nodemailer.createTestAccount((err, account) => {
+                    if (err) {
+                        console.error('Failed to create a testing account. ' + err.message);
+                        return process.exit(1);
+                    }
+
+                    // Create a SMTP transporter object
+                    const transporter = nodemailer.createTransport({
+                        host: 'smtp.gmail.com',
+                        port: 587,
+                        secure: false,
+                        auth: {
+                            user: 'rajmaisuria111@gmail.com',
+                            pass: 'pmks qvya coug ekih'
+                        },
+                        tls: {
+                            rejectUnauthorized: false
+                        }
+                    });
+
+                    // Message object
+                    let message = {
+                        from: `SWastik Finance <swastikfinance@gmail.com>`,
+                        to: `Recipient <${email}>`,
+                        subject: 'Please upload your Documents',
+                        html: sendUploadIndentityDocuments(customer_id.first_name + " " + customer_id.last_name,customer_id._id)
+                    };
+                    transporter.sendMail(message, (err, info) => {
+                        if (err) {
+                            console.log('Error occurred. ' + err.message);
+                            return process.exit(1);
+                        }
+                        emailURL = nodemailer.getTestMessageUrl(info);
+                        // linkUrl = nodemailer.getTestMessageUrl(info);
+                        res.send({ status: true, message: "Email sent Successfully", url: nodemailer.getTestMessageUrl(info) });
+                    });
+                });
+                res.send({status:true,message:"Email Sent Successfully !"})
+            }else{
+                res.send({status:false,message : "Please Provide user Email"})
+            }
+        } catch (error) {
+            console.log(error)
+            res.send({status:false,message:"Unable to provide service"});
         }
     }
 }
