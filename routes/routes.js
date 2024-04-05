@@ -57,6 +57,7 @@ router.post("/getLoanDetailsAdmin",verifyAdminToken,CustomerControll.getLoanDeta
 router.post("/getAllLoansAdmin",verifyAdminToken,CustomerControll.getALlLOanDetails);
 router.post("/changeLoanStatus",verifyAdminToken,CustomerControll.ApproveOrRejectApplication);
 router.post("/customer/loan",verifyAdminToken,CustomerControll.getLoanDetailsbyLoanID);
+router.post("/customer/loans",verifyStaffToken,CustomerControll.getLoanDetailsbyLoanID);
 router.post("/senddocumentmanagementemail",verifyAdminToken,CustomerControll.sendDocumentManagemantEmail);
 router.post("/uploadloanDocs/:loan_id",verifyCustomerToken,uploadLoanDocs,CustomerControll.uploadLoanDocuments);
 router.post("/verifydocuments",verifyAdminToken,uploadLoanDocs,CustomerControll.verifyLoanDocuments);

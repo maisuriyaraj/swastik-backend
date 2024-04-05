@@ -119,7 +119,7 @@ export class CustomerControll {
                         });
                     });
                     this.SetCustomerActivities(result._id, req.url, req.method, req.body, req.params, req.message);
-                    res.status(201).send({ status: true, message: "Customer Registered Successfully", token: token, code: 201, url: `/upload-docs/${result._id}`, user: result._id });
+                    res.status(201).send({ status: true, message: "Customer Registered Successfully", token: token, code: 201, url: `/user/upload-docs/${result._id}`, user: result._id });
                 }
             } catch (error) {
                 console.log(error)
